@@ -1,0 +1,242 @@
+{
+  "app": {
+    "name": "Soft Health",
+    "tagline": "Community Sanctuary"
+  },
+  "currentUser": {
+    "id": "user-ava",
+    "name": "Ava Brooks",
+    "role": "Community Host",
+    "initials": "AB",
+    "accent": "#0f5238",
+    "tone": "forest",
+    "posts": 130,
+    "followers": 2400,
+    "streak": 15
+  },
+  "categories": [
+    {
+      "id": "all",
+      "label": "All Feed"
+    },
+    {
+      "id": "fitness",
+      "label": "Fitness"
+    },
+    {
+      "id": "yoga",
+      "label": "Yoga"
+    },
+    {
+      "id": "nutrition",
+      "label": "Nutrition"
+    },
+    {
+      "id": "mental-health",
+      "label": "Mental Health"
+    }
+  ],
+  "communities": [
+    {
+      "id": "fitness-hub",
+      "name": "Fitness Hub",
+      "category": "fitness",
+      "accent": "#26a269",
+      "tone": "forest",
+      "membersLabel": "4.2k members"
+    },
+    {
+      "id": "yoga-flow",
+      "name": "Yoga Flow",
+      "category": "yoga",
+      "accent": "#4f8cff",
+      "tone": "blue",
+      "membersLabel": "2.1k members"
+    },
+    {
+      "id": "nutritionists",
+      "name": "Nutritionists",
+      "category": "nutrition",
+      "accent": "#ff8a3d",
+      "tone": "orange",
+      "membersLabel": "1.6k members"
+    },
+    {
+      "id": "mindful-circle",
+      "name": "Mindful Circle",
+      "category": "mental-health",
+      "accent": "#a65cff",
+      "tone": "purple",
+      "membersLabel": "1.3k members"
+    }
+  ],
+  "trendingCommunities": [
+    {
+      "id": "zen-meditations",
+      "name": "Zen Meditations",
+      "label": "Breathwork",
+      "accent": "#ff8a3d",
+      "tone": "orange"
+    },
+    {
+      "id": "cold-plunge-hub",
+      "name": "Cold Plunge Hub",
+      "label": "Recovery",
+      "accent": "#4f8cff",
+      "tone": "blue"
+    },
+    {
+      "id": "mental-clarity",
+      "name": "Mental Clarity",
+      "label": "Mindset",
+      "accent": "#a65cff",
+      "tone": "purple"
+    }
+  ],
+  "tracker": {
+    "dailyWaterLiters": 1,
+    "waterGoalLiters": 2.5,
+    "dailySteps": 400,
+    "stepTrendPercent": -95,
+    "stepTrendBaseline": 7529
+  },
+  "posts": [
+    {
+      "id": "post-1775487463951",
+      "authorId": "user-ava",
+      "authorName": "Ava Brooks",
+      "authorInitials": "AB",
+      "authorRole": "Community Host",
+      "authorAccent": "#0f5238",
+      "authorTone": "forest",
+      "communityId": "mindful-circle",
+      "communityName": "Mindful Circle",
+      "category": "mental-health",
+      "createdAt": "2026-04-06T14:57:43.951Z",
+      "content": "hiii how are you all?",
+      "tags": [],
+      "likes": 1,
+      "commentsCount": 2,
+      "shares": 18,
+      "likedByCurrentUser": true,
+      "bookmarked": true,
+      "mediaTheme": "bloom",
+      "comments": [
+        {
+          "id": "comment-1775487586413",
+          "authorName": "Ava Brooks",
+          "authorInitials": "AB",
+          "authorAccent": "#0f5238",
+          "authorTone": "forest",
+          "body": "jwhe a",
+          "createdAt": "2026-04-06T14:59:46.413Z"
+        },
+        {
+          "id": "comment-1775487591126",
+          "authorName": "Ava Brooks",
+          "authorInitials": "AB",
+          "authorAccent": "#0f5238",
+          "authorTone": "forest",
+          "body": "asbdhjsadb s dgujxhADSX",
+          "createdAt": "2026-04-06T14:59:51.126Z"
+        }
+      ],
+      "tip": null
+    },
+    {
+      "id": "post-1775487414115",
+      "authorId": "user-ava",
+      "authorName": "Ava Brooks",
+      "authorInitials": "AB",
+      "authorRole": "Community Host",
+      "authorAccent": "#0f5238",
+      "authorTone": "forest",
+      "communityId": "yoga-flow",
+      "communityName": "Yoga Flow",
+      "category": "yoga",
+      "createdAt": "2026-04-06T14:56:54.115Z",
+      "content": "hello you all",
+      "tags": [],
+      "likes": 0,
+      "commentsCount": 1,
+      "shares": 0,
+      "likedByCurrentUser": false,
+      "bookmarked": false,
+      "mediaTheme": "zen",
+      "comments": [
+        {
+          "id": "comment-1775487594420",
+          "authorName": "Ava Brooks",
+          "authorInitials": "AB",
+          "authorAccent": "#0f5238",
+          "authorTone": "forest",
+          "body": "SAD JKHAD S",
+          "createdAt": "2026-04-06T14:59:54.420Z"
+        }
+      ],
+      "tip": null
+    },
+    {
+      "id": "post-trail-run",
+      "authorId": "member-julian",
+      "authorName": "Julian Rivers",
+      "authorInitials": "JR",
+      "authorRole": "Trail mentor",
+      "authorAccent": "#0f5238",
+      "authorTone": "forest",
+      "communityId": "fitness-hub",
+      "communityName": "Fitness Hub",
+      "category": "fitness",
+      "createdAt": "2026-04-06T10:30:00.000Z",
+      "content": "Just finished a 5am run through the misty trails. There is something magical about being the only one awake in nature. Consistency is the true secret to long-term wellness.",
+      "tags": [
+        "MorningRoutine",
+        "Runner"
+      ],
+      "likes": 1201,
+      "commentsCount": 24,
+      "shares": 8,
+      "likedByCurrentUser": true,
+      "bookmarked": false,
+      "mediaTheme": "trail",
+      "tip": null,
+      "comments": []
+    },
+    {
+      "id": "post-hydration-tip",
+      "authorId": "member-elena",
+      "authorName": "Elena Chen",
+      "authorInitials": "EC",
+      "authorRole": "Nutrition coach",
+      "authorAccent": "#ff8a3d",
+      "authorTone": "orange",
+      "communityId": "nutritionists",
+      "communityName": "Nutritionists",
+      "category": "nutrition",
+      "createdAt": "2026-04-06T07:15:00.000Z",
+      "content": "A friendly reminder that hydration is 70% of the battle. If you are feeling sluggish mid-afternoon, try drinking a full glass of water with a squeeze of lemon before reaching for caffeine. Your brain will thank you.",
+      "tags": [],
+      "likes": 482,
+      "commentsCount": 1,
+      "shares": 3,
+      "likedByCurrentUser": true,
+      "bookmarked": false,
+      "mediaTheme": null,
+      "tip": {
+        "title": "Quick Wellness Tip",
+        "body": "Lemons contain high amounts of Vitamin C and potassium, boosting your immunity naturally."
+      },
+      "comments": [
+        {
+          "id": "comment-mar",
+          "authorName": "Marcus Thorne",
+          "authorInitials": "MT",
+          "authorAccent": "#132029",
+          "authorTone": "slate",
+          "body": "Adding lemon completely changed my morning routine. Thanks Elena!",
+          "createdAt": "2026-04-06T08:00:00.000Z"
+        }
+      ]
+    }
+  ]
+}

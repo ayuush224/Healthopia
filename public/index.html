@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soft Health</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-row">
+        <a class="brand" href="/">Soft Health</a>
+        <form id="searchForm" class="searchbar" autocomplete="off">
+          <label class="sr-only" for="searchInput">Search posts</label>
+          <input id="searchInput" name="search" type="search" placeholder="Search communities, experts, or topics">
+        </form>
+      </div>
+
+      <div class="topbar-actions">
+        <button id="alertsButton" class="icon-button" type="button" aria-label="Show alerts"></button>
+        <button id="themeButton" class="icon-button" type="button" aria-label="Toggle theme"></button>
+        <div id="headerAvatar" class="avatar avatar--user tone--forest">AB</div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="sidebar-card">
+          <h2>Communities</h2>
+          <p>Join the sanctuary</p>
+        </div>
+
+        <nav class="sidebar-nav">
+          <button class="nav-link nav-link--active" type="button" data-community="all">
+            <span class="nav-link__icon nav-link__icon--discover"></span>
+            <span>Discover</span>
+          </button>
+          <button class="nav-link" type="button" data-panel="communities">
+            <span class="nav-link__icon nav-link__icon--community"></span>
+            <span>My Communities</span>
+          </button>
+          <button class="nav-link" type="button" data-panel="journal">
+            <span class="nav-link__icon nav-link__icon--journal"></span>
+            <span>Health Journal</span>
+          </button>
+          <button class="nav-link" type="button" data-panel="experts">
+            <span class="nav-link__icon nav-link__icon--expert"></span>
+            <span>Experts</span>
+          </button>
+          <button class="nav-link" type="button" data-panel="settings">
+            <span class="nav-link__icon nav-link__icon--settings"></span>
+            <span>Settings</span>
+          </button>
+        </nav>
+
+        <section class="circle-panel">
+          <p class="section-label">Your Circle</p>
+          <div id="circleList" class="circle-list"></div>
+        </section>
+      </aside>
+
+      <main class="main-feed">
+        <section class="card composer-card">
+          <form id="composerForm" class="composer-form">
+            <div class="composer-top">
+              <div id="composerAvatar" class="avatar avatar--user tone--forest">AB</div>
+              <label class="composer-input">
+                <span class="sr-only">Post content</span>
+                <textarea id="postContent" rows="4" maxlength="500" placeholder="Share your wellness journey..." required></textarea>
+              </label>
+            </div>
+
+            <div class="composer-grid">
+              <label>
+                Community
+                <select id="communitySelect" required></select>
+              </label>
+              <label>
+                Tags
+                <input id="tagInput" type="text" placeholder="MorningRoutine, Runner">
+              </label>
+              <label>
+                Tip title
+                <input id="tipTitle" type="text" maxlength="60" placeholder="Optional tip title">
+              </label>
+              <label>
+                Tip details
+                <input id="tipBody" type="text" maxlength="140" placeholder="Optional wellness note">
+              </label>
+            </div>
+
+            <div class="composer-actions">
+              <div class="composer-chips">
+                <span class="ghost-chip">Media-inspired card</span>
+                <span class="ghost-chip">Live Express API</span>
+              </div>
+              <button id="postButton" class="button button--primary" type="submit">Post</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="filter-row">
+          <div id="categoryTabs" class="category-tabs"></div>
+          <p id="feedMeta" class="feed-meta"></p>
+        </section>
+
+        <div id="feedStatus" class="feed-status" aria-live="polite"></div>
+        <section id="postsFeed" class="post-stack"></section>
+      </main>
+
+      <aside class="insights-panel">
+        <section class="card tracker-card">
+          <div class="card-heading">
+            <h3>Health Tracker</h3>
+            <p>Keep the basics in motion</p>
+          </div>
+
+          <form id="trackerForm" class="tracker-form">
+            <div class="progress-card">
+              <div class="progress-card__copy">
+                <span>Daily Water</span>
+                <strong id="waterSummary">0.0 / 0.0 L</strong>
+              </div>
+              <progress id="waterProgress" class="progress-bar" max="100" value="0">0%</progress>
+            </div>
+
+            <div class="steps-card">
+              <div>
+                <p class="section-label">Daily Steps</p>
+                <strong id="stepCount">0</strong>
+                <p id="stepTrend" class="step-trend">0% from yesterday</p>
+              </div>
+
+              <div class="step-ring">
+                <svg viewBox="0 0 120 120" aria-hidden="true">
+                  <circle class="step-ring__track" cx="60" cy="60" r="46"></circle>
+                  <circle id="stepRingFill" class="step-ring__fill" cx="60" cy="60" r="46"></circle>
+                </svg>
+                <span>Go</span>
+              </div>
+            </div>
+
+            <div class="tracker-grid">
+              <label>
+                Water intake (L)
+                <input id="dailyWaterLiters" type="number" min="0" max="10" step="0.1" required>
+              </label>
+              <label>
+                Water goal (L)
+                <input id="waterGoalLiters" type="number" min="0.5" max="10" step="0.1" required>
+              </label>
+              <label class="tracker-grid__wide">
+                Steps
+                <input id="dailySteps" type="number" min="0" step="1" required>
+              </label>
+            </div>
+
+            <button id="trackerButton" class="button button--secondary" type="submit">Save tracker</button>
+          </form>
+        </section>
+
+        <section class="card stat-card">
+          <div class="card-heading">
+            <h3>Your Snapshot</h3>
+            <p>Updated from the backend</p>
+          </div>
+          <div id="userStats" class="stat-grid"></div>
+        </section>
+
+        <section class="card trending-card">
+          <div class="card-heading">
+            <h3>Trending Circles</h3>
+            <p>Fresh places to jump into</p>
+          </div>
+          <div id="trendingList" class="trending-list"></div>
+        </section>
+      </aside>
+    </div>
+
+    <nav class="mobile-nav">
+      <button class="mobile-nav__item mobile-nav__item--active" type="button">Home</button>
+      <button class="mobile-nav__item" type="button">Explore</button>
+      <button id="mobileComposeButton" class="mobile-nav__fab" type="button" aria-label="Create post">+</button>
+      <button class="mobile-nav__item" type="button">Journal</button>
+      <button class="mobile-nav__item" type="button">Profile</button>
+    </nav>
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
