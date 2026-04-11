@@ -8,7 +8,13 @@ const postSchema = new Schema({
     required: true
   },
   photo: {
-    type: String 
+    type: String,
+    default : "",
+    required : true
+  },
+  description: {
+    type: String,
+    required : [true, "Description is required"]
   },
   likes: {
     type: Number,
@@ -20,7 +26,8 @@ const postSchema = new Schema({
       ref: 'User'
     },
     description: {
-      type: String
+      type: String,
+      required : [true, "Comment description is required"],
     }
   }],
   tags: [{
@@ -30,10 +37,10 @@ const postSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Community'
   },
-  timestamp: {
+  updatedAt:{
     type: Date,
     default: Date.now 
   }
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('Post', postSchema);

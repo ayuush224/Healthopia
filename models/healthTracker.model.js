@@ -13,7 +13,8 @@ const healthTrackerSchema = new Schema({
   },
   waterGoal: {
     type: Number,
-    required: true
+    required: true,
+    default : 0
   },
   steps: {
     type: Number,

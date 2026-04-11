@@ -4,10 +4,12 @@ const { Schema } = mongoose;
 const communitySchema = new Schema({
   communityName: {
     type: String,
-    required: true
+    required: true,
+    unique: true
   },
   description: {
-    type: String
+    type: String,
+    required: [true, "Description is required"]
   },
   posts: [{
     type: Schema.Types.ObjectId,
