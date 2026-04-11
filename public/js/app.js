@@ -137,9 +137,11 @@ async function handleCommentSubmit(form) {
     input.value = "";
     showToast("Comment added.");
     await loadFeed();
-  } catch (error) {
+  }
+  catch (error) {
     showToast(error.message);
-  } finally {
+  }
+  finally {
     setButtonBusy(submitButton, false, { idle: "Reply", busy: "Sending..." });
   }
 }
