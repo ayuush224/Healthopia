@@ -1,6 +1,13 @@
 const express = require("express");
 const path = require("path");
 const mongoose = require("mongoose");
+require("dotenv").config();
+
+(async () => {
+  mongoose.connect(process.env.DATABASE_URL)
+  .then(() => console.log("Database Connected"))
+  .catch((err) => console.log("Error Occured in Database connection " + err));
+})();
 
 const bootstrapRoutes = require("./routes/bootstrapRoutes");
 const commentsRoutes = require("./routes/commentsRoutes");
