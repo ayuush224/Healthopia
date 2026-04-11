@@ -1,16 +1,17 @@
 {
-  "name": "soft-health",
+  "name": "health-wellness-community",
   "version": "1.0.0",
-  "description": "Soft Health community app powered by HTML, CSS, and Node.js.",
+  "description": "Health wellness community app built with Express, MongoDB, HTML, CSS, and vanilla JavaScript.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node server.js"
   },
   "dependencies": {
-    "dotenv": "^17.4.1",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.5",
     "express": "^4.21.2",
-    "mongoose": "^9.4.1"
-  },
-  "license": "MIT"
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.9.5"
+  }
 }

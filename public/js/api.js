@@ -1,56 +1,34 @@
-async function request(url, options = {}) {
-  const response = await fetch(url, {
-    headers: {
-      "Content-Type": "application/json"
-    },
+export async function apiFetch(url, options = {}) {
+  const config = {
+    credentials: 'include',
+    headers: {},
     ...options
-  });
+  };
 
-  const payload = await response.json().catch(() => ({}));
+  if (options.body && !(options.body instanceof FormData)) {
+    config.headers['Content-Type'] = 'application/json';
+  }
+
+  const response = await fetch(url, config);
+  const rawText = await response.text();
+  let payload = {};
+
+  if (rawText) {
+    try {
+      payload = JSON.parse(rawText);
+    } catch (_error) {
+      payload = { message: rawText };
+    }
+  }
+
+  if (response.status === 401) {
+    window.location.href = '/sign-in';
+    throw new Error(payload.message || 'Authentication required.');
+  }
 
   if (!response.ok) {
-    throw new Error(payload.error || "Request failed.");
+    throw new Error(payload.message || 'Something went wrong.');
   }
 
   return payload;
-}
-
-export function fetchBootstrap(filters) {
-  const params = new URLSearchParams({
-    category: filters.category,
-    community: filters.community
-  });
-
-  if (filters.search) {
-    params.set("search", filters.search);
-  }
-
-  return request(`/api/bootstrap?${params.toString()}`);
-}
-
-export function createPost(payload) {
-  return request("/api/posts", {
-    method: "POST",
-    body: JSON.stringify(payload)
-  });
-}
-
-export function togglePostAction(postId, action) {
-  return request(`/api/posts/${postId}/${action}`, {
-    method: "POST"
-  });
-}
-
-export function createComment(postId, message) {
-  return request(`/api/posts/${postId}/comments`, {
-    method: "POST",
-    body: JSON.stringify({ message })
-  });
-}
-
-export function updateTracker(payload) {
-  return request("/api/tracker", {
-    method: "POST",
-    body: JSON.stringify(payload)
-  });
 }

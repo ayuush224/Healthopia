@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In | Soft Health</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body class="auth-page">
+  <div class="auth-shell">
+    <section class="auth-hero">
+      <p class="eyebrow">Soft Health</p>
+      <h1>Return to your living wellness sanctuary.</h1>
+      <p class="auth-copy">
+        Stay close to your communities, your reflections, and your daily health rhythm in one calm space.
+      </p>
+
+      <div class="auth-preview">
+        <div class="mini-card">
+          <p class="mini-card__label">Daily Water</p>
+          <div class="progress-bar">
+            <span style="width: 72%"></span>
+          </div>
+          <strong>1.8 / 2.5 L</strong>
+        </div>
+        <div class="mini-card">
+          <p class="mini-card__label">Trending Circle</p>
+          <strong>Fitness Hub</strong>
+          <span>Morning routines, recovery, and supportive accountability.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="auth-card">
+      <div class="auth-card__header">
+        <h2>Sign in</h2>
+        <p>Use your username to continue into the app.</p>
+      </div>
+
+      <form id="sign-in-form" class="stack-form">
+        <label class="field">
+          <span>Username</span>
+          <input type="text" name="username" placeholder="e.g. julian.rivers" autocomplete="username" required>
+        </label>
+
+        <div id="auth-message" class="inline-message is-hidden" role="alert"></div>
+
+        <button class="button-primary button-primary--full" type="submit">Continue</button>
+      </form>
+
+      <p class="auth-footer">
+        New here?
+        <a href="/register">Create your account</a>
+      </p>
+    </section>
+  </div>
+
+  <script type="module" src="/js/sign-in.js"></script>
+</body>
+</html>

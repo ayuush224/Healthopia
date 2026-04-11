@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soft Health | Community Sanctuary</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body class="app-shell-body">
+  <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
+
+  <header class="topbar">
+    <div class="topbar__brand-group">
+      <a href="/" class="brand" data-route="/">Soft Health</a>
+      <label class="searchbar">
+        <span class="material-symbols-outlined">search</span>
+        <input id="global-search" type="search" placeholder="Search communities, experts..." autocomplete="off">
+      </label>
+    </div>
+
+    <div class="topbar__actions">
+      <button class="icon-button" type="button" aria-label="Notifications">
+        <span class="material-symbols-outlined">notifications</span>
+      </button>
+      <button class="icon-button" type="button" aria-label="Theme">
+        <span class="material-symbols-outlined">dark_mode</span>
+      </button>
+
+      <div class="menu-shell">
+        <button id="profile-menu-button" class="avatar-button" type="button" aria-expanded="false" aria-controls="profile-menu">
+          <span id="header-avatar"></span>
+        </button>
+
+        <div id="profile-menu" class="dropdown-menu is-hidden">
+          <button type="button" data-route="/profile">Profile</button>
+          <button type="button" data-route="/health">Health Tracker</button>
+          <button id="sign-out-button" type="button">Sign out</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <aside class="sidebar sidebar--left">
+      <div class="sidebar__section">
+        <h2>Communities</h2>
+        <p>Join the sanctuary</p>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="sidebar-nav__item" data-route="/">
+          <span class="material-symbols-outlined">explore</span>
+          <span>Discover</span>
+        </button>
+        <button class="sidebar-nav__item" data-route="/profile">
+          <span class="material-symbols-outlined">group</span>
+          <span>My Communities</span>
+        </button>
+        <button class="sidebar-nav__item" data-route="/health">
+          <span class="material-symbols-outlined">menu_book</span>
+          <span>Health Journal</span>
+        </button>
+        <button class="sidebar-nav__item" data-action="open-first-community">
+          <span class="material-symbols-outlined">verified</span>
+          <span>Community Spotlight</span>
+        </button>
+        <button class="sidebar-nav__item" data-route="/profile">
+          <span class="material-symbols-outlined">settings</span>
+          <span>Profile Settings</span>
+        </button>
+      </nav>
+
+      <div class="sidebar__section sidebar__section--circle">
+        <h3>Your Circle</h3>
+        <ul id="joined-communities-list" class="circle-list"></ul>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div id="view-root" class="view-root"></div>
+    </main>
+
+    <aside class="sidebar sidebar--right">
+      <section>
+        <h3 class="sidebar-title">
+          <span class="material-symbols-outlined">monitoring</span>
+          <span>Health Tracker</span>
+        </h3>
+        <div id="health-sidebar" class="sidebar-stack"></div>
+      </section>
+
+      <section id="profile-stats-sidebar" class="stat-panel"></section>
+
+      <section>
+        <h3 class="trending-title">Trending Circles</h3>
+        <ul id="trending-communities-list" class="trending-list"></ul>
+      </section>
+    </aside>
+  </div>
+
+  <nav class="mobile-nav">
+    <button type="button" class="mobile-nav__item" data-route="/">
+      <span class="material-symbols-outlined">home</span>
+      <span>Home</span>
+    </button>
+    <button type="button" class="mobile-nav__item" data-route="/profile">
+      <span class="material-symbols-outlined">explore</span>
+      <span>Circles</span>
+    </button>
+    <button type="button" class="mobile-nav__item mobile-nav__item--primary" data-action="focus-composer">
+      <span class="material-symbols-outlined">add</span>
+    </button>
+    <button type="button" class="mobile-nav__item" data-route="/health">
+      <span class="material-symbols-outlined">menu_book</span>
+      <span>Health</span>
+    </button>
+    <button type="button" class="mobile-nav__item" data-route="/profile">
+      <span class="material-symbols-outlined">person</span>
+      <span>Profile</span>
+    </button>
+  </nav>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

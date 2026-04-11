@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Soft Health | Community Sanctuary</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed": "#002113",
+                      "on-secondary-fixed-variant": "#005235",
+                      "background": "#f8fafb",
+                      "inverse-primary": "#95d4b3",
+                      "on-tertiary-fixed-variant": "#1a4e50",
+                      "on-tertiary": "#ffffff",
+                      "error": "#ba1a1a",
+                      "on-secondary": "#ffffff",
+                      "surface-container": "#eceeef",
+                      "inverse-on-surface": "#eff1f2",
+                      "surface": "#f8fafb",
+                      "surface-tint": "#2c694e",
+                      "on-primary": "#ffffff",
+                      "primary-container": "#2d6a4f",
+                      "surface-bright": "#f8fafb",
+                      "error-container": "#ffdad6",
+                      "surface-container-low": "#f2f4f5",
+                      "on-surface-variant": "#404943",
+                      "primary-fixed": "#b1f0ce",
+                      "outline": "#707973",
+                      "secondary-fixed-dim": "#75daa8",
+                      "tertiary": "#1c4f51",
+                      "tertiary-fixed": "#b9ecee",
+                      "on-primary-fixed-variant": "#0e5138",
+                      "on-secondary-container": "#00734d",
+                      "on-surface": "#191c1d",
+                      "secondary-container": "#92f7c3",
+                      "surface-variant": "#e1e3e4",
+                      "secondary": "#006c48",
+                      "tertiary-container": "#366769",
+                      "on-background": "#191c1d",
+                      "primary": "#0f5238",
+                      "inverse-surface": "#2e3132",
+                      "tertiary-fixed-dim": "#9ecfd1",
+                      "on-tertiary-fixed": "#002021",
+                      "primary-fixed-dim": "#95d4b3",
+                      "surface-container-highest": "#e1e3e4",
+                      "outline-variant": "#bfc9c1",
+                      "surface-container-high": "#e6e8e9",
+                      "on-tertiary-container": "#b1e3e5",
+                      "on-primary-container": "#a8e7c5",
+                      "on-error-container": "#93000a",
+                      "surface-dim": "#d8dadb",
+                      "secondary-fixed": "#92f7c3",
+                      "on-primary-fixed": "#002114",
+                      "surface-container-lowest": "#ffffff",
+                      "on-error": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "fontFamily": {
+                      "headline": ["Manrope"],
+                      "body": ["Inter"],
+                      "label": ["Inter"]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafb; }
+        .font-manrope { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- TopNavBar (Shared Component) -->
+<header class="fixed top-0 w-full z-50 bg-surface/70 dark:bg-slate-900/70 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-8 flex-1">
+<span class="text-2xl font-bold text-emerald-900 dark:text-emerald-100 font-manrope tracking-tight">Soft Health</span>
+<div class="hidden md:flex flex-1 max-w-xl relative">
+<div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+<span class="material-symbols-outlined text-lg">search</span>
+</div>
+<input class="w-full bg-surface-container-low dark:bg-slate-800 border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Search communities, experts..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-colors text-slate-600 dark:text-slate-400">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-colors text-slate-600 dark:text-slate-400">
+<span class="material-symbols-outlined" data-icon="dark_mode">dark_mode</span>
+</button>
+<div class="h-9 w-9 rounded-full overflow-hidden border-2 border-primary-container">
+<img alt="User profile settings" data-alt="professional portrait of a smiling woman with clear skin and natural lighting for a health app profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAulmL59o_W0fMZeNEDN8r2YLDQDO0AKSer1yxRBGDn3GvnWjegtl-BKKRFtWFHqbfC2jZTVX3-hgDqv9j8oqmq6v4YCJr-k4J7qtPu6Z_gsfkQd3UBD122pNOPT7i9yp1ZZzFbk6cVOUWaBiAwkBgpQDs-wg49P8aaRzRmk10Au5mt9g4yrkfbbdnG20extJoFpf-fhTZuXx8E1WxVVlv7FyqY1YwgW6Nyxu4Aq2PZJ4cAqH34UxYRSpYzM-Z_EgHLxqeh6kioUcI"/>
+</div>
+</div>
+</header>
+<div class="pt-16 min-h-screen flex">
+<!-- SideNavBar (Shared Component) -->
+<aside class="hidden lg:flex fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-surface dark:bg-slate-950 flex-col py-8 pr-4 overflow-y-auto">
+<div class="px-6 mb-8">
+<h2 class="text-lg font-extrabold text-emerald-900 dark:text-emerald-100 font-manrope">Communities</h2>
+<p class="text-xs text-slate-500">Join the sanctuary</p>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-6 py-3 text-emerald-900 dark:text-emerald-300 bg-emerald-100/50 dark:bg-emerald-900/30 rounded-r-full font-semibold transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="explore">explore</span>
+<span class="font-manrope text-sm">Discover</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-slate-500 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 hover:translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-manrope text-sm">My Communities</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-slate-500 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 hover:translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span class="font-manrope text-sm">Health Journal</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-slate-500 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 hover:translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="verified">verified</span>
+<span class="font-manrope text-sm">Experts</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-slate-500 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 hover:translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-manrope text-sm">Settings</span>
+</a>
+</nav>
+<div class="mt-12 px-6">
+<h3 class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-4">Your Circle</h3>
+<ul class="space-y-4">
+<li class="flex items-center gap-3 group cursor-pointer">
+<div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+<span class="text-sm font-medium text-slate-600 group-hover:text-emerald-700">Fitness Hub</span>
+</li>
+<li class="flex items-center gap-3 group cursor-pointer">
+<div class="w-2 h-2 rounded-full bg-blue-400"></div>
+<span class="text-sm font-medium text-slate-600 group-hover:text-emerald-700">Yoga Flow</span>
+</li>
+<li class="flex items-center gap-3 group cursor-pointer">
+<div class="w-2 h-2 rounded-full bg-orange-400"></div>
+<span class="text-sm font-medium text-slate-600 group-hover:text-emerald-700">Nutritionists</span>
+</li>
+</ul>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 lg:ml-64 lg:mr-80 px-4 md:px-8 py-8">
+<div class="max-w-3xl mx-auto">
+<!-- Create Post Box -->
+<section class="bg-surface-container-lowest rounded-2xl p-6 mb-8 transition-all">
+<div class="flex gap-4 mb-4">
+<div class="h-12 w-12 rounded-full overflow-hidden flex-shrink-0">
+<img alt="Profile" data-alt="close up of a professional woman profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdIhfbI2SW1CY-VWZwNe_StSCx0s32R-Gs2bTlc3OkpAWDfcENT3HjYdhpjKocAE_UGz3PA-S4M3G9L221kQdyxuyHa-OzbZt1zbmWgAyWGB2BlgrLR9JQuSe6-8ltZH_FP6XeUWZSJUjY95etZpBvnZXun6kW6dbajHy9Se-j9aIveGqUth6aOnhvNpcE8LyMMv3EBw2gfNmCfqNIh15LRrGl8S4rL1eVWSfFJMMEXY8LbuGITpSxSohNLdTnjUHvBTj8H_YM-VI"/>
+</div>
+<textarea class="w-full bg-surface-container-low border-none rounded-xl p-4 text-sm resize-none focus:ring-1 focus:ring-primary/20 h-24" placeholder="Share your wellness journey..."></textarea>
+</div>
+<div class="flex justify-between items-center pt-4">
+<div class="flex gap-2">
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-high text-xs font-medium text-slate-600 hover:bg-emerald-50 transition-colors">
+<span class="material-symbols-outlined text-sm">image</span>
+                                Media
+                            </button>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-high text-xs font-medium text-slate-600 hover:bg-emerald-50 transition-colors">
+<span class="material-symbols-outlined text-sm">sell</span>
+                                Tags
+                            </button>
+</div>
+<button class="bg-primary hover:bg-primary-container text-white px-6 py-2 rounded-full text-sm font-bold transition-all transform active:scale-95 shadow-lg shadow-primary/10">
+                            Post
+                        </button>
+</div>
+</section>
+<!-- Filter Tabs -->
+<div class="flex gap-3 mb-8 overflow-x-auto no-scrollbar pb-2">
+<button class="px-5 py-2 rounded-full bg-primary text-white text-sm font-bold whitespace-nowrap">All Feed</button>
+<button class="px-5 py-2 rounded-full bg-surface-container-high text-slate-600 hover:bg-emerald-50 transition-colors text-sm font-medium whitespace-nowrap">Fitness</button>
+<button class="px-5 py-2 rounded-full bg-surface-container-high text-slate-600 hover:bg-emerald-50 transition-colors text-sm font-medium whitespace-nowrap">Yoga</button>
+<button class="px-5 py-2 rounded-full bg-surface-container-high text-slate-600 hover:bg-emerald-50 transition-colors text-sm font-medium whitespace-nowrap">Nutrition</button>
+<button class="px-5 py-2 rounded-full bg-surface-container-high text-slate-600 hover:bg-emerald-50 transition-colors text-sm font-medium whitespace-nowrap">Mental Health</button>
+</div>
+<!-- Post Feed -->
+<div class="space-y-8">
+<!-- Post 1 -->
+<article class="bg-surface-container-lowest rounded-2xl overflow-hidden">
+<div class="p-6">
+<div class="flex justify-between items-start mb-4">
+<div class="flex gap-3">
+<img alt="Avatar" class="h-10 w-10 rounded-full" data-alt="headshot of a young athletic man smiling outdoors" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFoiXbjab29fbNhSL7EUHP3fS4qm1em6nKMD2sTJm2vlWeCxIypcXwNDHGJTr9wxzhd9b4yf8Kg65KbKo3o5D2e5fqE2exwr9Eq_pQK5g7O77xYvEJapnkZCKaW7DUrbgBEz3KYK8PKJorNnYS-eSW4xa0BFDYAKTo5rPsuwO0quGJUpUlvyFo7Ao1FNvA3_F2C_J1GFhvg_JiOlTXksqxmA3zt1BrW87CJMn-tu9ZtzyO8Duv-Q7hUY-hs6EQAoFy8VxHEAe0yqE"/>
+<div>
+<h4 class="font-bold text-sm text-slate-900">Julian Rivers</h4>
+<p class="text-[11px] text-slate-500">2 hours ago • <span class="text-emerald-700 font-semibold">Fitness Hub</span></p>
+</div>
+</div>
+<button class="text-slate-400 hover:text-slate-600">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<p class="text-slate-700 text-sm mb-4 leading-relaxed">
+                                Just finished a 5am run through the misty trails. There's something magical about being the only one awake in nature. Consistency is the true secret to long-term wellness. 🌿🏃‍♂️
+                            </p>
+<div class="flex flex-wrap gap-2 mb-4">
+<span class="px-3 py-1 rounded-full bg-tertiary-container text-[10px] text-white font-bold tracking-tight">MorningRoutine</span>
+<span class="px-3 py-1 rounded-full bg-emerald-100 text-[10px] text-emerald-800 font-bold tracking-tight">Runner</span>
+</div>
+</div>
+<div class="aspect-video relative overflow-hidden">
+<img alt="Trail" class="w-full h-full object-cover" data-alt="breathtaking landscape of a winding forest trail at sunrise with light rays coming through the trees" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUZwBLDL1NCawBur3JwlqcWEFvxz3Z0ZJEZpwyGDQLh4phf-uZ_vADsAbsYnxl7nJnOegROc8gNtlGgLhD9dQZEsQBysJKZ4i3COrOxLVJdps4zT0Ua5rpS8DxTwqhFnNJjko1QJknXwKrH3PbdPWTwU1xBl7mKwkGvLbw2VeA7YAgTO8WBFZlGGfRgZ87Hsvfe_Yg9EfNCbF_X7Bs2jOPpOBKceAIT30_kOZpjokKPM_H2n7oaV-XlRenp35QIANGHGyq3AqE70Q"/>
+</div>
+<div class="p-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-1.5 text-slate-500 hover:text-emerald-600 transition-colors">
+<span class="material-symbols-outlined text-xl">favorite</span>
+<span class="text-xs font-bold">1.2k</span>
+</button>
+<button class="flex items-center gap-1.5 text-slate-500 hover:text-emerald-600 transition-colors">
+<span class="material-symbols-outlined text-xl">chat_bubble</span>
+<span class="text-xs font-bold">24</span>
+</button>
+<button class="flex items-center gap-1.5 text-slate-500 hover:text-emerald-600 transition-colors">
+<span class="material-symbols-outlined text-xl">share</span>
+</button>
+</div>
+<button class="text-slate-400 hover:text-emerald-600">
+<span class="material-symbols-outlined text-xl">bookmark</span>
+</button>
+</div>
+</article>
+<!-- Post 2 -->
+<article class="bg-surface-container-lowest rounded-2xl p-6">
+<div class="flex justify-between items-start mb-4">
+<div class="flex gap-3">
+<img alt="Avatar" class="h-10 w-10 rounded-full" data-alt="portrait of a calm woman with her hair in a bun looking at the camera" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLSwd6DXdlp-LAGam_SkZKGv9soLU34dnm-NBpaLHz1g8pIwmDbeZOIvnh_xddR8HWX1ZsfDUDVliKTCgvC9AcMnd3BrWFQ95SBlMKQyZcO8-dsFGfW5mqFJLtugm0N6j5q2UjWAdnBhydelzika-9XWniFkbuH6xO4QCRYKQJTCoaDL4cHyjhD22Nkjw2LAWgu9TracilDQ2khYYlcmFEd8LV20V5x8HeCtcV_IP9l_U940c8zpo7G3JLFDMJt7SJuNhxcaDBizI"/>
+<div>
+<h4 class="font-bold text-sm text-slate-900">Elena Chen</h4>
+<p class="text-[11px] text-slate-500">5 hours ago • <span class="text-emerald-700 font-semibold">Nutritionists</span></p>
+</div>
+</div>
+<button class="text-slate-400 hover:text-slate-600">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<p class="text-slate-700 text-sm mb-4 leading-relaxed">
+                            A friendly reminder that hydration is 70% of the battle! If you're feeling sluggish mid-afternoon, try drinking a full glass of water with a squeeze of lemon before reaching for caffeine. Your brain will thank you. 🍋💧
+                        </p>
+<div class="p-4 bg-surface-container-low rounded-xl mb-4">
+<div class="flex items-start gap-3">
+<div class="bg-emerald-100 p-2 rounded-lg text-emerald-800">
+<span class="material-symbols-outlined">lightbulb</span>
+</div>
+<div>
+<h5 class="text-xs font-bold text-slate-900 mb-1">Quick Wellness Tip</h5>
+<p class="text-xs text-slate-500">Lemons contain high amounts of Vitamin C and potassium, boosting your immunity naturally.</p>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-1.5 text-emerald-600 font-bold transition-colors">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="text-xs">482</span>
+</button>
+<button class="flex items-center gap-1.5 text-slate-500 hover:text-emerald-600 transition-colors">
+<span class="material-symbols-outlined text-xl">chat_bubble</span>
+<span class="text-xs font-bold">12</span>
+</button>
+</div>
+<!-- Dummy Comments Section -->
+<div class="mt-6 space-y-4 border-t border-slate-100 pt-6">
+<div class="flex gap-3">
+<img alt="User" class="h-8 w-8 rounded-full" data-alt="man with beard in studio lighting looking thoughtfully to the side" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkYq1EB7vp4iLMwadC5YV8Z0B9W_frfwAGt6fqD-5exo5kQMSMkUjemnud1UMZ0H4nXq-xvCnS_pcVJTB5ijomyPQxxObnG7JR-qGfwVLmGi-2f9AzWqFwqcTJVBalYG7XBiR3yv5MiNGZuVLT5CGfk3fmaaloDoEvoWPdWZbMFpq899eF1lvCqoFBZlhmWHFt6A4bU09WcwHN8Xe5tN0hCwXznxze5rbqo2uqXAt7jlcxLrABHIj7g9qTVDaUfXiOVDhgrt1TY44"/>
+<div class="bg-surface-container-low p-3 rounded-2xl flex-1">
+<p class="text-xs font-bold text-slate-900 mb-1">Marcus Thorne</p>
+<p class="text-xs text-slate-600">Adding lemon completely changed my morning routine. Thanks Elena!</p>
+</div>
+</div>
+</div>
+</article>
+</div>
+</div>
+</main>
+<!-- Right Sidebar (Health Tracker) -->
+<aside class="hidden xl:block fixed right-0 top-16 h-[calc(100vh-4rem)] w-80 bg-surface flex flex-col p-6 overflow-y-auto space-y-8">
+<!-- Health Tracker Widgets -->
+<section>
+<h3 class="font-manrope font-bold text-emerald-900 mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-xl">monitoring</span>
+                    Health Tracker
+                </h3>
+<div class="space-y-4">
+<!-- Progress Card -->
+<div class="bg-surface-container-lowest p-5 rounded-2xl">
+<div class="flex justify-between items-center mb-3">
+<span class="text-xs font-bold text-slate-600">Daily Water</span>
+<span class="text-xs font-bold text-emerald-700">1.8 / 2.5 L</span>
+</div>
+<div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 72%"></div>
+</div>
+</div>
+<!-- Steps Ring Sim -->
+<div class="bg-surface-container-lowest p-5 rounded-2xl flex items-center justify-between">
+<div>
+<p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Daily Steps</p>
+<p class="text-xl font-extrabold text-emerald-900 font-manrope">8,432</p>
+<p class="text-[10px] text-emerald-600 font-bold">+12% from yesterday</p>
+</div>
+<div class="relative h-16 w-16">
+<svg class="h-16 w-16 transform -rotate-90" viewbox="0 0 36 36">
+<circle cx="18" cy="18" fill="none" r="16" stroke="#f1f5f9" stroke-width="3"></circle>
+<circle cx="18" cy="18" fill="none" r="16" stroke="#0f5238" stroke-dasharray="100" stroke-dashoffset="30" stroke-linecap="round" stroke-width="3"></circle>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-xl">directions_run</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- User Stats -->
+<section class="bg-surface-container-low p-6 rounded-3xl">
+<div class="grid grid-cols-3 gap-2 text-center">
+<div>
+<p class="text-xs font-bold text-slate-900">128</p>
+<p class="text-[10px] text-slate-500">Posts</p>
+</div>
+<div>
+<p class="text-xs font-bold text-slate-900">2.4k</p>
+<p class="text-[10px] text-slate-500">Followers</p>
+</div>
+<div>
+<p class="text-xs font-bold text-slate-900">15</p>
+<p class="text-[10px] text-slate-500">Streak</p>
+</div>
+</div>
+</section>
+<!-- Trending Communities -->
+<section>
+<h3 class="font-manrope font-bold text-slate-900 mb-4 text-sm">Trending Circles</h3>
+<ul class="space-y-4">
+<li class="flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="h-8 w-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-lg">spa</span>
+</div>
+<span class="text-xs font-bold text-slate-700 group-hover:text-primary">Zen Meditations</span>
+</div>
+<button class="text-[10px] font-bold text-primary bg-emerald-50 px-2 py-1 rounded-full">Join</button>
+</li>
+<li class="flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="h-8 w-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-lg">water_drop</span>
+</div>
+<span class="text-xs font-bold text-slate-700 group-hover:text-primary">Cold Plunge Hub</span>
+</div>
+<button class="text-[10px] font-bold text-primary bg-emerald-50 px-2 py-1 rounded-full">Join</button>
+</li>
+<li class="flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="h-8 w-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-lg">self_improvement</span>
+</div>
+<span class="text-xs font-bold text-slate-700 group-hover:text-primary">Mental Clarity</span>
+</div>
+<button class="text-[10px] font-bold text-primary bg-emerald-50 px-2 py-1 rounded-full">Join</button>
+</li>
+</ul>
+</section>
+</aside>
+</div>
+<!-- Mobile Navigation (Bottom) -->
+<nav class="lg:hidden fixed bottom-0 w-full bg-surface-container-lowest border-t border-slate-100 px-6 py-3 flex justify-between items-center z-50">
+<button class="flex flex-col items-center gap-1 text-emerald-800">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="text-[10px] font-bold">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">explore</span>
+<span class="text-[10px] font-medium">Explore</span>
+</button>
+<button class="w-12 h-12 bg-primary rounded-full -mt-8 flex items-center justify-center text-white shadow-lg shadow-primary/30">
+<span class="material-symbols-outlined">add</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="text-[10px] font-medium">Journal</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-medium">Profile</span>
+</button>
+</nav>
+</body></html>
