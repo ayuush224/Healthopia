@@ -1,18 +1,18 @@
 const jwt = require('jsonwebtoken');
 
-const { authCookieName, isProduction, jwtSecret } = require('../config/env');
+const { authCookieName, jwtSecret } = require('../config/env');
 
 function getCookieOptions() {
   return {
     httpOnly: true,
-    sameSite: 'lax',
-    secure: isProduction,
-    maxAge: 7 * 24 * 60 * 60 * 1000
+    // sameSite: 'lax',
+    secure: true,
+    maxAge: 24 * 60 * 60 * 1000
   };
 }
 
 function signAuthToken(userId) {
-  return jwt.sign({ userId }, jwtSecret, { expiresIn: '7d' });
+  return jwt.sign({ userId }, jwtSecret, { expiresIn: '24h' });
 }
 
 function verifyAuthToken(token) {
@@ -24,7 +24,7 @@ function attachAuthCookie(res, userId) {
 }
 
 function clearAuthCookie(res) {
-  res.clearCookie(authCookieName, getCookieOptions());
+  res.clearCookie(authCookieName , { ...getCookieOptions(), maxAge: 0 });
 }
 
 module.exports = {
