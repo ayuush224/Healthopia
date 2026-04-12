@@ -3,7 +3,6 @@ import {
   escapeHtml,
   formatCompactNumber,
   formatRelativeTime,
-  formatWater,
   getAccentVars,
   matchesSearch,
   renderAvatar
@@ -19,13 +18,18 @@ const state = {
     likesCount: 0
   },
   communities: [],
-  health: null,
+  health: {
+    today: null,
+    weekly: [],
+    yearly: []
+  },
   homePosts: [],
   currentCommunity: null,
   communityPosts: [],
   currentPost: null,
   search: '',
-  feedFilter: 'all'
+  feedFilter: 'all',
+  healthRange: 'weekly'
 };
 
 const elements = {
@@ -53,8 +57,8 @@ function getRoute() {
     return { name: 'profile' };
   }
 
-  if (path === '/health') {
-    return { name: 'health' };
+  if (path === '/dashboard' || path === '/health') {
+    return { name: 'dashboard' };
   }
 
   const communityMatch = path.match(/^\/community\/([^/]+)$/);
@@ -68,6 +72,115 @@ function getRoute() {
   }
 
   return { name: 'home' };
+}
+
+function getDateInputValue(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+function createEmptyHealthEntry(date = getDateInputValue(new Date())) {
+  return {
+    date,
+    steps: 0,
+    running_km: 0,
+    sleep_hours: 0
+  };
+}
+
+function formatMetricNumber(value = 0, options = {}) {
+  return new Intl.NumberFormat('en', {
+    minimumFractionDigits: options.minimumFractionDigits || 0,
+    maximumFractionDigits: options.maximumFractionDigits ?? 1
+  }).format(Number(value || 0));
+}
+
+function getTodayHealthEntry() {
+  return state.health?.today || createEmptyHealthEntry();
+}
+
+function getHealthTimeline(metric) {
+  const weeklyData = Array.isArray(state.health?.weekly) && state.health.weekly.length
+    ? state.health.weekly
+    : Array.from({ length: 7 }, (_, index) => {
+        const date = new Date();
+        date.setHours(0, 0, 0, 0);
+        date.setDate(date.getDate() - (6 - index));
+        return {
+          ...createEmptyHealthEntry(getDateInputValue(date)),
+          label: new Intl.DateTimeFormat('en', { weekday: 'short' }).format(date)
+        };
+      });
+
+  return weeklyData.map((entry) => Number(entry?.[metric] || 0));
+}
+
+function getHealthTrendCopy(metric) {
+  const weekly = Array.isArray(state.health?.weekly) ? state.health.weekly : [];
+  if (weekly.length < 2) {
+    return 'No previous trend yet';
+  }
+
+  const todayValue = Number(weekly[weekly.length - 1]?.[metric] || 0);
+  const yesterdayValue = Number(weekly[weekly.length - 2]?.[metric] || 0);
+  const difference = todayValue - yesterdayValue;
+
+  if (!difference) {
+    return 'Same as yesterday';
+  }
+
+  const formattedDifference = metric === 'steps'
+    ? formatCompactNumber(Math.abs(difference))
+    : formatMetricNumber(Math.abs(difference));
+
+  return `${difference > 0 ? '+' : '-'}${formattedDifference} vs yesterday`;
+}
+
+function renderSparkline(values, color = 'var(--primary)') {
+  const normalizedValues = values.length ? values : [0, 0];
+  const maxValue = Math.max(...normalizedValues, 1);
+  const points = normalizedValues
+    .map((value, index) => {
+      const x = normalizedValues.length === 1 ? 50 : (index / (normalizedValues.length - 1)) * 100;
+      const y = 100 - (Number(value || 0) / maxValue) * 100;
+      return `${x},${y}`;
+    })
+    .join(' ');
+
+  return `
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <polyline fill="none" stroke="${color}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" points="${points}"></polyline>
+    </svg>
+  `;
+}
+
+function renderActivityChart(data) {
+  const chartData = Array.isArray(data) && data.length ? data : [];
+  const metrics = ['steps', 'running_km', 'sleep_hours'];
+  const maxByMetric = metrics.reduce((accumulator, metric) => {
+    accumulator[metric] = Math.max(...chartData.map((entry) => Number(entry?.[metric] || 0)), 1);
+    return accumulator;
+  }, {});
+
+  return `
+    <div class="activity-chart">
+      <div class="activity-chart__grid">
+        ${chartData.map((entry) => `
+          <div class="activity-chart__group">
+            <div class="activity-chart__bars">
+              <span class="activity-chart__bar activity-chart__bar--steps" style="height:${Number(entry.steps || 0) ? Math.max(14, (Number(entry.steps || 0) / maxByMetric.steps) * 100) : 0}%"></span>
+              <span class="activity-chart__bar activity-chart__bar--running" style="height:${Number(entry.running_km || 0) ? Math.max(14, (Number(entry.running_km || 0) / maxByMetric.running_km) * 100) : 0}%"></span>
+              <span class="activity-chart__bar activity-chart__bar--sleep" style="height:${Number(entry.sleep_hours || 0) ? Math.max(14, (Number(entry.sleep_hours || 0) / maxByMetric.sleep_hours) * 100) : 0}%"></span>
+            </div>
+            <span class="activity-chart__label">${escapeHtml(entry.label || entry.month || '')}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
 }
 
 function showToast(message, type = 'success') {
@@ -86,7 +199,7 @@ function renderLoadingState(title = 'Loading your sanctuary...') {
     <section class="loading-card">
       <div class="page-heading">
         <h1>${escapeHtml(title)}</h1>
-        <p>Gathering communities, feed activity, and your latest health snapshot.</p>
+        <p>Gathering communities, feed activity, and your latest wellness data.</p>
       </div>
       <div class="stack-grid">
         <div class="loading-shimmer"></div>
@@ -135,46 +248,24 @@ function renderSidebar() {
       `).join('')
     : '<li><span class="muted-copy">No circles joined yet.</span></li>';
 
-  const health = state.health || { waterIntake: 0, waterGoal: 2500, hydrationPercent: 0, steps: 0, stepsPercent: 0 };
+  const health = getTodayHealthEntry();
   elements.healthSidebar.innerHTML = `
-    <article class="health-card">
-      <div class="progress-line">
-        <span>Daily Water</span>
-        <strong>${escapeHtml(formatWater(health.waterIntake))} / ${escapeHtml(formatWater(health.waterGoal))}</strong>
-      </div>
-      <div class="progress-bar">
-        <span style="width:${health.hydrationPercent}%"></span>
-      </div>
-    </article>
+    <div class="health-mini-grid">
+      <article class="health-mini-card">
+        <span class="health-mini-card__label">Today's Steps</span>
+        <strong>${formatCompactNumber(health.steps)}</strong>
+      </article>
 
-    <article class="health-card">
-      <div class="ring-row">
-        <div class="ring__meta">
-          <span class="mini-card__label">Daily Steps</span>
-          <strong>${formatCompactNumber(health.steps)}</strong>
-          <span>${health.stepsPercent}% of ${formatCompactNumber(health.stepsGoal || 10000)} goal</span>
-        </div>
-        <div class="ring">
-          <svg viewBox="0 0 120 120" aria-hidden="true">
-            <circle cx="60" cy="60" r="48" fill="none" stroke="#e6eaec" stroke-width="10"></circle>
-            <circle
-              cx="60"
-              cy="60"
-              r="48"
-              fill="none"
-              stroke="#0f5238"
-              stroke-width="10"
-              stroke-linecap="round"
-              stroke-dasharray="301.59"
-              stroke-dashoffset="${301.59 - (301.59 * health.stepsPercent) / 100}">
-            </circle>
-          </svg>
-          <div class="ring__icon">
-            <span class="material-symbols-outlined">directions_run</span>
-          </div>
-        </div>
-      </div>
-    </article>
+      <article class="health-mini-card">
+        <span class="health-mini-card__label">Running (km)</span>
+        <strong>${formatMetricNumber(health.running_km)}</strong>
+      </article>
+
+      <article class="health-mini-card">
+        <span class="health-mini-card__label">Sleep (hours)</span>
+        <strong>${formatMetricNumber(health.sleep_hours)}</strong>
+      </article>
+    </div>
   `;
 
   elements.profileStatsSidebar.innerHTML = `
@@ -215,7 +306,7 @@ function renderSidebar() {
   document.querySelectorAll('.sidebar-nav__item').forEach((item) => {
     item.classList.remove('is-active');
     const route = item.dataset.route;
-    if (route && window.location.pathname === route) {
+    if (route && (window.location.pathname === route || (window.location.pathname === '/health' && route === '/dashboard'))) {
       item.classList.add('is-active');
     }
     if (window.location.pathname.startsWith('/community/') && item.dataset.action === 'open-first-community') {
@@ -225,7 +316,7 @@ function renderSidebar() {
 
   document.querySelectorAll('.mobile-nav__item').forEach((item) => {
     item.classList.remove('is-active');
-    if (item.dataset.route === window.location.pathname) {
+    if (item.dataset.route === window.location.pathname || (window.location.pathname === '/health' && item.dataset.route === '/dashboard')) {
       item.classList.add('is-active');
     }
   });
@@ -618,97 +709,153 @@ function renderPostDetailView() {
   `;
 }
 
-function renderHealthView() {
-  const health = state.health || { waterIntake: 0, waterGoal: 2500, hydrationPercent: 0, steps: 0, stepsPercent: 0, stepsGoal: 10000 };
+function renderDashboardView() {
+  const health = getTodayHealthEntry();
+  const chartData = state.healthRange === 'yearly' ? state.health.yearly : state.health.weekly;
+  const chartCopy = state.healthRange === 'weekly'
+    ? 'Daily tracked data visualization for the last seven days.'
+    : 'Monthly average activity across the current year.';
+  const statsCards = [
+    {
+      label: 'Walking',
+      unit: 'Steps today',
+      value: formatCompactNumber(health.steps),
+      metric: 'steps',
+      icon: 'directions_walk'
+    },
+    {
+      label: 'Running',
+      unit: 'Distance (km)',
+      value: formatMetricNumber(health.running_km),
+      metric: 'running_km',
+      icon: 'directions_run'
+    },
+    {
+      label: 'Sleep',
+      unit: 'Hours slept',
+      value: formatMetricNumber(health.sleep_hours),
+      metric: 'sleep_hours',
+      icon: 'bedtime'
+    }
+  ];
 
   elements.viewRoot.innerHTML = `
-    <section class="health-layout">
+    <section class="dashboard-shell">
       <div class="page-heading">
-        <h1>Health tracker</h1>
-        <p>Water intake, water goal, and steps are persisted in the dedicated HealthTracker model linked to your user account.</p>
+        <h1>Dashboard</h1>
+        <p>Use the dashboard for detailed activity analytics, daily logging, and progress review while the homepage stays lightweight.</p>
       </div>
 
-      <div class="health-grid">
-        <article class="health-card">
-          <div class="progress-line">
-            <span>Water progress</span>
-            <strong>${escapeHtml(formatWater(health.waterIntake))} / ${escapeHtml(formatWater(health.waterGoal))}</strong>
+      <div class="dashboard-grid">
+        <article class="activity-panel">
+          <div class="activity-panel__header">
+            <div>
+              <h2>Health Activity</h2>
+              <p>${escapeHtml(chartCopy)}</p>
+            </div>
+
+            <div class="activity-toggle" role="tablist" aria-label="Health activity range">
+              <button class="activity-toggle__button ${state.healthRange === 'weekly' ? 'is-active' : ''}" type="button" data-action="set-health-range" data-range="weekly">Weekly</button>
+              <button class="activity-toggle__button ${state.healthRange === 'yearly' ? 'is-active' : ''}" type="button" data-action="set-health-range" data-range="yearly">Yearly</button>
+            </div>
           </div>
-          <div class="progress-bar">
-            <span style="width:${health.hydrationPercent}%"></span>
+
+          ${renderActivityChart(chartData)}
+
+          <div class="activity-legend">
+            <span class="activity-legend__item">
+              <span class="activity-legend__dot activity-legend__dot--steps"></span>
+              <span>Walking</span>
+            </span>
+            <span class="activity-legend__item">
+              <span class="activity-legend__dot activity-legend__dot--running"></span>
+              <span>Running</span>
+            </span>
+            <span class="activity-legend__item">
+              <span class="activity-legend__dot activity-legend__dot--sleep"></span>
+              <span>Sleep</span>
+            </span>
           </div>
-          <p>${health.hydrationPercent}% of your hydration goal reached.</p>
         </article>
 
-        <article class="health-card">
-          <div class="ring-row">
-            <div class="ring__meta">
-              <span class="mini-card__label">Daily Steps</span>
-              <strong>${formatCompactNumber(health.steps)}</strong>
-              <span>${health.stepsPercent}% of ${formatCompactNumber(health.stepsGoal)} goal</span>
-            </div>
-            <div class="ring">
-              <svg viewBox="0 0 120 120" aria-hidden="true">
-                <circle cx="60" cy="60" r="48" fill="none" stroke="#e6eaec" stroke-width="10"></circle>
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="48"
-                  fill="none"
-                  stroke="#0f5238"
-                  stroke-width="10"
-                  stroke-linecap="round"
-                  stroke-dasharray="301.59"
-                  stroke-dashoffset="${301.59 - (301.59 * health.stepsPercent) / 100}">
-                </circle>
-              </svg>
-              <div class="ring__icon">
-                <span class="material-symbols-outlined">monitoring</span>
+        <div class="dashboard-side-stack">
+          <article class="dashboard-input-card">
+            <div class="detail-card__header">
+              <div>
+                <h2>Log Daily Activity</h2>
+                <p class="muted-copy">Save today&apos;s walking, running, and sleep data to keep the dashboard in sync.</p>
               </div>
             </div>
-          </div>
-        </article>
-      </div>
 
-      <article class="detail-card">
-        <div class="detail-card__header">
-          <div>
-            <h2>Update daily metrics</h2>
-            <p class="muted-copy">Adjust your hydration goal or log the latest numbers from your day.</p>
-          </div>
+            <form id="health-log-form" class="dashboard-form">
+              <input type="hidden" name="date" value="${escapeHtml(String(health.date || getDateInputValue(new Date())))}">
+
+              <label class="dashboard-input">
+                <span class="dashboard-input__icon material-symbols-outlined">directions_walk</span>
+                <span class="dashboard-input__copy">
+                  <strong>Walking (steps)</strong>
+                  <input type="number" min="0" name="steps" value="${escapeHtml(String(health.steps || 0))}" placeholder="e.g. 8000" required>
+                </span>
+              </label>
+
+              <label class="dashboard-input">
+                <span class="dashboard-input__icon material-symbols-outlined">directions_run</span>
+                <span class="dashboard-input__copy">
+                  <strong>Running (km)</strong>
+                  <input type="number" min="0" step="0.1" name="running_km" value="${escapeHtml(String(health.running_km || 0))}" placeholder="e.g. 5.2" required>
+                </span>
+              </label>
+
+              <label class="dashboard-input">
+                <span class="dashboard-input__icon material-symbols-outlined">bedtime</span>
+                <span class="dashboard-input__copy">
+                  <strong>Sleep (hours)</strong>
+                  <input type="number" min="0" step="0.1" name="sleep_hours" value="${escapeHtml(String(health.sleep_hours || 0))}" placeholder="e.g. 8" required>
+                </span>
+              </label>
+
+              <button class="button-primary dashboard-form__submit" type="submit">Save Activity</button>
+            </form>
+          </article>
+
+          <section class="dashboard-daily-stats">
+            <div class="detail-card__header">
+              <div>
+                <h2>Daily Stats</h2>
+                <p class="muted-copy">Today&apos;s values with recent trend lines.</p>
+              </div>
+            </div>
+
+            <div class="daily-stats-grid">
+              ${statsCards.map((card) => `
+                <article class="daily-stat-card">
+                  <div class="daily-stat-card__header">
+                    <span class="daily-stat-card__icon material-symbols-outlined">${card.icon}</span>
+                    <div>
+                      <h3>${escapeHtml(card.label)}</h3>
+                      <p>${escapeHtml(card.unit)}</p>
+                    </div>
+                  </div>
+                  <div class="daily-stat-card__value-row">
+                    <strong>${escapeHtml(card.value)}</strong>
+                    <span>${escapeHtml(getHealthTrendCopy(card.metric))}</span>
+                  </div>
+                  <div class="sparkline">
+                    ${renderSparkline(getHealthTimeline(card.metric))}
+                  </div>
+                </article>
+              `).join('')}
+            </div>
+          </section>
         </div>
-
-        <form id="health-form" class="health-form">
-          <div class="field-grid">
-            <label class="field">
-              <span>Water intake (ml)</span>
-              <input type="number" min="0" name="waterIntake" value="${escapeHtml(String(health.waterIntake || 0))}" required>
-            </label>
-
-            <label class="field">
-              <span>Water goal (ml)</span>
-              <input type="number" min="0" name="waterGoal" value="${escapeHtml(String(health.waterGoal || 0))}" required>
-            </label>
-          </div>
-
-          <label class="field">
-            <span>Steps</span>
-            <input type="number" min="0" name="steps" value="${escapeHtml(String(health.steps || 0))}" required>
-          </label>
-
-          <div class="health-inline-actions">
-            <button class="button-primary" type="submit">Save metrics</button>
-            <button class="soft-button" type="button" data-action="health-quick-add" data-field="waterIntake" data-amount="250">+250 ml</button>
-            <button class="soft-button" type="button" data-action="health-quick-add" data-field="steps" data-amount="500">+500 steps</button>
-          </div>
-        </form>
-      </article>
+      </div>
     </section>
   `;
 }
 
 function renderCurrentView() {
   const route = getRoute();
+  elements.viewRoot.className = route.name === 'dashboard' ? 'view-root view-root--dashboard' : 'view-root';
 
   if (route.name === 'home') {
     renderHomeView();
@@ -730,23 +877,36 @@ function renderCurrentView() {
     return;
   }
 
-  if (route.name === 'health') {
-    renderHealthView();
+  if (route.name === 'dashboard') {
+    renderDashboardView();
   }
 }
 
+async function loadHealthData() {
+  const [todayData, weeklyData, yearlyData] = await Promise.all([
+    apiFetch('/api/health/today'),
+    apiFetch('/api/health/weekly'),
+    apiFetch('/api/health/yearly')
+  ]);
+
+  state.health = {
+    today: todayData.health || createEmptyHealthEntry(),
+    weekly: Array.isArray(weeklyData.data) ? weeklyData.data : [],
+    yearly: Array.isArray(yearlyData.data) ? yearlyData.data : []
+  };
+}
+
 async function loadShellData() {
-  const [profileData, communitiesData, healthData] = await Promise.all([
+  const [profileData, communitiesData] = await Promise.all([
     apiFetch('/api/users/profile'),
     apiFetch('/api/communities'),
-    apiFetch('/api/health')
+    loadHealthData()
   ]);
 
   state.profile = profileData.user;
   state.profilePosts = profileData.posts;
   state.profileStats = profileData.stats;
   state.communities = communitiesData.communities;
-  state.health = healthData.health;
 
   const validCommunityIds = new Set(getJoinedCommunities().map((community) => community._id));
   if (state.feedFilter !== 'all' && !validCommunityIds.has(state.feedFilter)) {
@@ -929,7 +1089,7 @@ async function handleComment(form) {
   }
 }
 
-async function handleHealthUpdate(form) {
+async function handleHealthLog(form) {
   const submitButton = form.querySelector('button[type="submit"]');
   submitButton.disabled = true;
   submitButton.textContent = 'Saving...';
@@ -937,22 +1097,25 @@ async function handleHealthUpdate(form) {
   try {
     const formData = new FormData(form);
 
-    await apiFetch('/api/health', {
-      method: 'PUT',
+    await apiFetch('/api/health/log', {
+      method: 'POST',
       body: JSON.stringify({
-        waterIntake: Number(formData.get('waterIntake')),
-        waterGoal: Number(formData.get('waterGoal')),
-        steps: Number(formData.get('steps'))
+        date: formData.get('date'),
+        steps: Number(formData.get('steps')),
+        running_km: Number(formData.get('running_km')),
+        sleep_hours: Number(formData.get('sleep_hours'))
       })
     });
 
-    showToast('Health metrics updated.');
-    await refreshView({ skipLoading: true });
+    await loadHealthData();
+    renderSidebar();
+    renderCurrentView();
+    showToast('Daily activity saved.');
   } catch (error) {
     showToast(error.message, 'error');
   } finally {
     submitButton.disabled = false;
-    submitButton.textContent = 'Save metrics';
+    submitButton.textContent = 'Save Activity';
   }
 }
 
@@ -1059,13 +1222,9 @@ document.addEventListener('click', async (event) => {
     return;
   }
 
-  if (action === 'health-quick-add') {
-    const form = document.getElementById('health-form');
-    if (!form) {
-      return;
-    }
-    const field = form.elements[actionButton.dataset.field];
-    field.value = Number(field.value || 0) + Number(actionButton.dataset.amount || 0);
+  if (action === 'set-health-range') {
+    state.healthRange = actionButton.dataset.range === 'yearly' ? 'yearly' : 'weekly';
+    renderCurrentView();
   }
 });
 
@@ -1085,9 +1244,9 @@ document.addEventListener('submit', async (event) => {
     await handleComment(event.target);
   }
 
-  if (event.target.id === 'health-form') {
+  if (event.target.id === 'health-log-form') {
     event.preventDefault();
-    await handleHealthUpdate(event.target);
+    await handleHealthLog(event.target);
   }
 });
 

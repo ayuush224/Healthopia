@@ -1,5 +1,4 @@
 const User = require('../models/User');
-const HealthTracker = require('../models/HealthTracker');
 const asyncHandler = require('../utils/asyncHandler');
 const { AppError } = require('../utils/errors');
 const { attachAuthCookie, clearAuthCookie } = require('../utils/authTokens');
@@ -21,13 +20,6 @@ const register = asyncHandler(async (req, res) => {
     username,
     posts: [],
     communitiesJoined: []
-  });
-
-  await HealthTracker.create({
-    userId: user._id,
-    waterIntake: 0,
-    waterGoal: 2500,
-    steps: 0
   });
 
   attachAuthCookie(res, user._id.toString());
