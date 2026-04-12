@@ -34,7 +34,7 @@ const elements = {
   joinedCommunitiesList: document.getElementById('joined-communities-list'),
   healthSidebar: document.getElementById('health-sidebar'),
   profileStatsSidebar: document.getElementById('profile-stats-sidebar'),
-  trendingCommunitiesList: document.getElementById('trending-communities-list'),
+  // trendingCommunitiesList: document.getElementById('trending-communities-list'),
   headerAvatar: document.getElementById('header-avatar'),
   profileMenuButton: document.getElementById('profile-menu-button'),
   profileMenu: document.getElementById('profile-menu'),
@@ -114,12 +114,12 @@ function getJoinedCommunities() {
   return state.communities.filter((community) => joinedIds.has(community._id));
 }
 
-function getTrendingCommunities() {
-  const joinedIds = new Set((state.profile?.communitiesJoined || []).map((community) => community._id));
-  return state.communities
-    .filter((community) => !joinedIds.has(community._id))
-    .slice(0, 3);
-}
+// function getTrendingCommunities() {
+//   const joinedIds = new Set((state.profile?.communitiesJoined || []).map((community) => community._id));
+//   return state.communities
+//     .filter((community) => !joinedIds.has(community._id))
+//     .slice(0, 3);
+// }
 
 function renderSidebar() {
   const profileName = state.profile?.name || 'Soft Health';
@@ -194,23 +194,23 @@ function renderSidebar() {
     </div>
   `;
 
-  const trendingCommunities = getTrendingCommunities();
-  elements.trendingCommunitiesList.innerHTML = trendingCommunities.length
-    ? trendingCommunities.map((community) => `
-        <li class="trending-item">
-          <div class="trending-item__main">
-            <span class="accent-tile" style="${getAccentVars(community.communityName)}">${escapeHtml(community.communityName.charAt(0))}</span>
-            <div>
-              <strong>${escapeHtml(community.communityName)}</strong>
-              <p class="micro-copy">${formatCompactNumber(community.noOfActiveMembers)} members</p>
-            </div>
-          </div>
-          <button class="join-button" type="button" data-action="join-community" data-community-id="${community._id}">
-            Join
-          </button>
-        </li>
-      `).join('')
-    : '<li class="muted-copy">You have already joined the highlighted circles.</li>';
+  // const trendingCommunities = getTrendingCommunities();
+  // elements.trendingCommunitiesList.innerHTML = trendingCommunities.length
+  //   ? trendingCommunities.map((community) => `
+  //       <li class="trending-item">
+  //         <div class="trending-item__main">
+  //           <span class="accent-tile" style="${getAccentVars(community.communityName)}">${escapeHtml(community.communityName.charAt(0))}</span>
+  //           <div>
+  //             <strong>${escapeHtml(community.communityName)}</strong>
+  //             <p class="micro-copy">${formatCompactNumber(community.noOfActiveMembers)} members</p>
+  //           </div>
+  //         </div>
+  //         <button class="join-button" type="button" data-action="join-community" data-community-id="${community._id}">
+  //           Join
+  //         </button>
+  //       </li>
+  //     `).join('')
+  //   : '<li class="muted-copy">You have already joined the highlighted circles.</li>';
 
   document.querySelectorAll('.sidebar-nav__item').forEach((item) => {
     item.classList.remove('is-active');

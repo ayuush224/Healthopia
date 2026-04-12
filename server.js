@@ -11,11 +11,9 @@ require("dotenv").config();
 
 const app = require('./src/app');
 const { port } = require('./src/config/env');
-const { connectToDatabase } = require('./src/config/db');
 const { seedCommunities } = require('./src/config/seed');
 
 async function startServer() {
-  await connectToDatabase();
   await seedCommunities();
 
   app.listen(port, () => {
