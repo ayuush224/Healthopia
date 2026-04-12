@@ -30,7 +30,8 @@ form.addEventListener('submit', async (event) => {
       body: JSON.stringify({
         name: formData.get('name'),
         username: formData.get('username'),
-        profilePicture: formData.get('profilePicture')
+        email: formData.get('email'),
+        password: formData.get('password')
       })
     });
 

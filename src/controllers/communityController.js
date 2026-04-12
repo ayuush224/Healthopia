@@ -3,7 +3,7 @@ const Post = require('../models/Post');
 const User = require('../models/User');
 const asyncHandler = require('../utils/asyncHandler');
 const { AppError } = require('../utils/errors');
-const { buildPostQuery } = require('../utils/postQuery');
+const { buildPostQuery, decoratePostsForUser } = require('../utils/postQuery');
 const { ensureObjectId } = require('../utils/validation');
 
 const getCommunities = asyncHandler(async (req, res) => {
@@ -29,10 +29,15 @@ const getCommunities = asyncHandler(async (req, res) => {
 const getCommunityById = asyncHandler(async (req, res) => {
   const communityId = ensureObjectId(req.params.id, 'Community id');
 
-  const [community, currentUser, posts] = await Promise.all([
+  const [community, currentUser, rawPosts] = await Promise.all([
     Community.findById(communityId),
     User.findById(req.user._id).select('communitiesJoined'),
-    buildPostQuery(Post.find({ communityId }).sort({ createdAt: -1 }))
+    buildPostQuery(Post.find({
+      $or: [
+        { community: communityId },
+        { communityId }
+      ]
+    }).sort({ createdAt: -1 }))
   ]);
 
   if (!community) {
@@ -47,6 +52,8 @@ const getCommunityById = asyncHandler(async (req, res) => {
     ...community.toObject(),
     isJoined: joinedIds.has(community._id.toString())
   };
+
+  const posts = await decoratePostsForUser(rawPosts, req.user._id);
 
   res.json({
     community: normalizedCommunity,

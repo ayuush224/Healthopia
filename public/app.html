@@ -23,10 +23,17 @@
     </div>
 
     <div class="topbar__actions">
-      <button class="icon-button" type="button" aria-label="Notifications">
-        <span class="material-symbols-outlined">notifications</span>
+      <button
+        id="create-post-trigger"
+        class="icon-button topbar__create-button"
+        type="button"
+        aria-label="Create post"
+        aria-haspopup="dialog"
+        aria-controls="post-modal"
+        data-action="open-post-modal">
+        <span class="material-symbols-outlined">add</span>
       </button>
-      <button class="icon-button" type="button" aria-label="Theme">
+      <button class="icon-button topbar__theme-button" type="button" aria-label="Theme">
         <span class="material-symbols-outlined">dark_mode</span>
       </button>
 
@@ -37,7 +44,7 @@
 
         <div id="profile-menu" class="dropdown-menu is-hidden">
           <button type="button" data-route="/profile">Profile</button>
-          <button type="button" data-route="/dashboard">Dashboard</button>
+          <button type="button" data-route="/health">Health Tracker</button>
           <button id="sign-out-button" type="button">Sign out</button>
         </div>
       </div>
@@ -60,9 +67,9 @@
           <span class="material-symbols-outlined">group</span>
           <span>My Communities</span>
         </button>
-        <button class="sidebar-nav__item" data-route="/dashboard">
-          <span class="material-symbols-outlined">dashboard</span>
-          <span>Dashboard</span>
+        <button class="sidebar-nav__item" data-route="/health">
+          <span class="material-symbols-outlined">menu_book</span>
+          <span>Health Journal</span>
         </button>
         <button class="sidebar-nav__item" data-action="open-first-community">
           <span class="material-symbols-outlined">verified</span>
@@ -111,18 +118,90 @@
       <span class="material-symbols-outlined">explore</span>
       <span>Circles</span>
     </button>
-    <button type="button" class="mobile-nav__item mobile-nav__item--primary" data-action="focus-composer">
+    <button
+      type="button"
+      class="mobile-nav__item mobile-nav__item--primary"
+      data-action="open-post-modal"
+      aria-label="Create post"
+      aria-haspopup="dialog"
+      aria-controls="post-modal">
       <span class="material-symbols-outlined">add</span>
     </button>
-    <button type="button" class="mobile-nav__item" data-route="/dashboard">
-      <span class="material-symbols-outlined">dashboard</span>
-      <span>Dashboard</span>
+    <button type="button" class="mobile-nav__item" data-route="/health">
+      <span class="material-symbols-outlined">menu_book</span>
+      <span>Health</span>
     </button>
     <button type="button" class="mobile-nav__item" data-route="/profile">
       <span class="material-symbols-outlined">person</span>
       <span>Profile</span>
     </button>
   </nav>
+
+  <div id="post-modal" class="modal-shell is-hidden" aria-hidden="true">
+    <div class="modal-shell__backdrop" data-action="dismiss-post-modal"></div>
+
+    <div id="post-modal-dialog" class="composer-card composer-modal" role="dialog" aria-modal="true" aria-labelledby="post-modal-title" aria-describedby="post-modal-helper">
+      <form id="create-post-form" class="stack-form" enctype="multipart/form-data" novalidate>
+        <div class="composer-modal__header">
+          <div class="composer-modal__heading">
+            <h2 id="post-modal-title">Create post</h2>
+            <p class="muted-copy">Share a grounded update with your community.</p>
+          </div>
+
+          <button class="soft-button" type="button" data-action="dismiss-post-modal">Discard</button>
+        </div>
+
+        <div id="post-modal-message" class="inline-message is-hidden" role="alert"></div>
+
+        <div class="field-grid composer-modal__meta">
+          <label class="field">
+            <span>Community</span>
+            <select id="post-community-input" name="community" required>
+              <option value="">Choose a community</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Tags</span>
+            <input id="post-tags-input" type="text" name="tags" placeholder="e.g. recovery, hydration">
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Title</span>
+          <input id="post-title-input" type="text" name="title" placeholder="Give your update a clear title" required maxlength="120">
+        </label>
+
+        <label class="field">
+          <span>Body</span>
+          <textarea id="post-body-input" class="textarea composer-modal__textarea" name="body" placeholder="Share your wellness journey..." required></textarea>
+        </label>
+
+        <div class="composer-modal__media">
+          <div class="composer-modal__media-actions">
+            <label class="sidebar-chip file-picker" for="post-image-input">
+              <span class="material-symbols-outlined">image</span>
+              <span id="post-image-label">Upload image</span>
+            </label>
+
+            <button id="post-image-remove" class="soft-button is-hidden" type="button" data-action="remove-post-image">Remove image</button>
+          </div>
+
+          <input id="post-image-input" class="is-hidden" type="file" name="image" accept="image/*">
+          <p id="post-image-error" class="helper-text helper-text--error is-hidden"></p>
+
+          <div id="post-image-preview" class="composer-modal__preview is-hidden">
+            <img id="post-image-preview-image" src="" alt="Selected post preview">
+          </div>
+        </div>
+
+        <div class="composer-actions composer-actions--modal">
+          <span id="post-modal-helper" class="helper-text">Your post will appear instantly at the top of the feed.</span>
+          <button id="create-post-submit" class="button-primary" type="submit">Post</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script type="module" src="/js/app.js"></script>
 </body>

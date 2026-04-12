@@ -16,11 +16,8 @@ router.get('/sign-in', redirectIfAuthenticated, sendPage('sign-in.html'));
 router.get('/register', redirectIfAuthenticated, sendPage('register.html'));
 
 router.get('/', requirePageAuth, sendPage('app.html'));
-router.get('/dashboard', requirePageAuth, sendPage('app.html'));
 router.get('/profile', requirePageAuth, sendPage('app.html'));
-router.get('/health', requirePageAuth, (_req, res) => {
-  res.redirect('/dashboard');
-});
+router.get('/health', requirePageAuth, sendPage('app.html'));
 router.get('/community/:communityId', requirePageAuth, sendPage('app.html'));
 router.get('/post/:postId', requirePageAuth, sendPage('app.html'));
 

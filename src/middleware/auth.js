@@ -3,6 +3,7 @@ const { authCookieName } = require('../config/env');
 const { AppError } = require('../utils/errors');
 const { clearAuthCookie, verifyAuthToken } = require('../utils/authTokens');
 
+//corect
 function getTokenFromRequest(req) {
   const cookieToken = req.cookies[authCookieName];
   const authHeader = req.headers.authorization;
@@ -25,7 +26,7 @@ async function loadUserFromToken(token) {
     throw new AppError('Authentication required.', 401);
   }
 
-  const user = await User.findById(payload.userId).select('_id name username profilePicture');
+  let user = await User.findById(payload.userId).select('_id name username email');
 
   if (!user) {
     throw new AppError('Authentication required.', 401);

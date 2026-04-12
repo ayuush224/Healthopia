@@ -85,28 +85,23 @@ export function getInitials(value = '') {
 
 export function renderAvatar(entity, size = 'default') {
   const name = entity?.name || entity?.communityName || entity?.username || 'Soft Health';
-  const image = entity?.profilePicture || entity?.communityPhoto || '';
   const accentVars = getAccentVars(name);
   const sizeClass = size === 'small' ? 'avatar avatar--small' : size === 'large' ? 'avatar avatar--large' : 'avatar';
   const initials = escapeHtml(getInitials(name));
 
-  if (!image) {
-    return `<span class="${sizeClass}" style="${accentVars}"><span>${initials}</span></span>`;
-  }
-
-  return `
-    <span class="${sizeClass}" style="${accentVars}">
-      <img src="${escapeHtml(image)}" alt="${escapeHtml(name)}" onerror="this.remove(); this.nextElementSibling.hidden=false;">
-      <span hidden>${initials}</span>
-    </span>
-  `;
+  return `<span class="${sizeClass}" style="${accentVars}"><span>${initials}</span></span>`;
 }
 
 export function matchesSearch(post, query) {
   const searchableValue = [
+    post.title,
+    post.body,
     post.description,
+    post.user?.name,
+    post.user?.username,
     post.createdBy?.name,
     post.createdBy?.username,
+    post.community?.communityName,
     post.communityId?.communityName,
     ...(post.tags || []),
     ...(post.comments || []).map((comment) => comment.description)

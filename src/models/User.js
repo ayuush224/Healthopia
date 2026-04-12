@@ -6,9 +6,14 @@ const userSchema = new Schema({
     type: String,
     required: true
   },
-  profilePicture: {
+  email: {
     type: String,
-    default: ''
+    required: true,
+    unique: true
+  },
+  password: {
+    type: String,
+    required: true
   },
   username: {
     type: String,
@@ -16,6 +21,10 @@ const userSchema = new Schema({
     unique: true
   },
   posts: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Post'
+  }],
+  likedPosts: [{
     type: Schema.Types.ObjectId,
     ref: 'Post'
   }],

@@ -7,29 +7,19 @@ const healthTrackerSchema = new Schema({
     ref: 'User',
     required: true
   },
-  date: {
-    type: String,
-    required: true
+  waterIntake: {
+    type: Number,
+    default: 0
+  },
+  waterGoal: {
+    type: Number,
+    required: true,
+    default: 0
   },
   steps: {
     type: Number,
-    default: 0,
-    min: 0
-  },
-  running_km: {
-    type: Number,
-    default: 0,
-    min: 0
-  },
-  sleep_hours: {
-    type: Number,
-    default: 0,
-    min: 0
+    default: 0
   }
-}, {
-  timestamps: true
 });
-
-healthTrackerSchema.index({ userId: 1, date: 1 }, { unique: true });
 
 module.exports = mongoose.model('HealthTracker', healthTrackerSchema);

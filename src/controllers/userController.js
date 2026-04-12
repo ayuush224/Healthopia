@@ -3,21 +3,42 @@ const Post = require('../models/Post');
 const asyncHandler = require('../utils/asyncHandler');
 const { AppError } = require('../utils/errors');
 const { ensureOptionalString, normalizeUsername } = require('../utils/validation');
-const { buildPostQuery } = require('../utils/postQuery');
+const { buildPostQuery, decoratePostsForUser } = require('../utils/postQuery');
+
+function buildUserResponse(user) {
+  return {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    username: user.username,
+    posts: user.posts,
+    likedPosts: user.likedPosts || [],
+    communitiesJoined: user.communitiesJoined
+  };
+}
 
 const getProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).populate(
+  const user = await User.findById(req.user._id)
+    .select('name email username posts likedPosts communitiesJoined')
+    .populate(
     'communitiesJoined',
     'communityName description noOfActiveMembers communityPhoto'
-  );
+    );
 
   if (!user) {
     throw new AppError('User not found.', 404);
   }
 
-  const posts = await buildPostQuery(
-    Post.find({ createdBy: user._id }).sort({ createdAt: -1 })
+  const rawPosts = await buildPostQuery(
+    Post.find({
+      $or: [
+        { user: user._id },
+        { createdBy: user._id }
+      ]
+    }).sort({ createdAt: -1 })
   );
+
+  const posts = await decoratePostsForUser(rawPosts, req.user._id);
 
   const commentsCount = posts.reduce((total, post) => total + post.comments.length, 0);
   const likesCount = posts.reduce((total, post) => total + post.likes, 0);
@@ -47,10 +68,6 @@ const updateProfile = asyncHandler(async (req, res) => {
     updates.name = ensureOptionalString(req.body.name, { min: 2, max: 60 });
   }
 
-  if (req.body.profilePicture !== undefined) {
-    updates.profilePicture = ensureOptionalString(req.body.profilePicture, { max: 1000 });
-  }
-
   if (req.body.username !== undefined) {
     const username = normalizeUsername(req.body.username);
     const existingUser = await User.findOne({
@@ -70,7 +87,7 @@ const updateProfile = asyncHandler(async (req, res) => {
 
   res.json({
     message: 'Profile updated successfully.',
-    user
+    user: buildUserResponse(user)
   });
 });
 

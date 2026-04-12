@@ -82,6 +82,22 @@ function ensureOptionalNumber(value, fieldName) {
   return numberValue;
 }
 
+function ensureBoolean(value, fieldName) {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (value === 'true') {
+    return true;
+  }
+
+  if (value === 'false') {
+    return false;
+  }
+
+  throw new AppError(`${fieldName} must be true or false.`, 400);
+}
+
 function parseTags(value) {
   const rawValues = Array.isArray(value) ? value : String(value || '').split(',');
 
@@ -92,6 +108,7 @@ function parseTags(value) {
 }
 
 module.exports = {
+  ensureBoolean,
   ensureObjectId,
   ensureOptionalNumber,
   ensureOptionalString,

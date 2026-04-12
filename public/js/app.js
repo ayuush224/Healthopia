@@ -3,10 +3,14 @@ import {
   escapeHtml,
   formatCompactNumber,
   formatRelativeTime,
+  formatWater,
   getAccentVars,
   matchesSearch,
   renderAvatar
 } from './helpers.js';
+import { createPostLikeManager } from './postLikeManager.js';
+
+const MAX_POST_IMAGE_BYTES = 512 * 1024;
 
 const state = {
   profile: null,
@@ -18,19 +22,20 @@ const state = {
     likesCount: 0
   },
   communities: [],
-  health: {
-    today: null,
-    weekly: [],
-    yearly: []
-  },
+  health: null,
   homePosts: [],
   currentCommunity: null,
   communityPosts: [],
   currentPost: null,
+  postModalOpen: false,
+  postSubmitting: false,
+  postImagePreviewUrl: '',
+  shellHydrated: false,
   search: '',
-  feedFilter: 'all',
-  healthRange: 'weekly'
+  feedFilter: 'all'
 };
+
+const likeManager = createPostLikeManager();
 
 const elements = {
   viewRoot: document.getElementById('view-root'),
@@ -43,7 +48,23 @@ const elements = {
   profileMenuButton: document.getElementById('profile-menu-button'),
   profileMenu: document.getElementById('profile-menu'),
   signOutButton: document.getElementById('sign-out-button'),
-  toastStack: document.getElementById('toast-stack')
+  toastStack: document.getElementById('toast-stack'),
+  postModal: document.getElementById('post-modal'),
+  postModalDialog: document.getElementById('post-modal-dialog'),
+  createPostForm: document.getElementById('create-post-form'),
+  createPostSubmit: document.getElementById('create-post-submit'),
+  postModalMessage: document.getElementById('post-modal-message'),
+  postModalHelper: document.getElementById('post-modal-helper'),
+  postTitleInput: document.getElementById('post-title-input'),
+  postBodyInput: document.getElementById('post-body-input'),
+  postCommunityInput: document.getElementById('post-community-input'),
+  postTagsInput: document.getElementById('post-tags-input'),
+  postImageInput: document.getElementById('post-image-input'),
+  postImageLabel: document.getElementById('post-image-label'),
+  postImageError: document.getElementById('post-image-error'),
+  postImagePreview: document.getElementById('post-image-preview'),
+  postImagePreviewImage: document.getElementById('post-image-preview-image'),
+  postImageRemove: document.getElementById('post-image-remove')
 };
 
 function getRoute() {
@@ -57,8 +78,8 @@ function getRoute() {
     return { name: 'profile' };
   }
 
-  if (path === '/dashboard' || path === '/health') {
-    return { name: 'dashboard' };
+  if (path === '/health') {
+    return { name: 'health' };
   }
 
   const communityMatch = path.match(/^\/community\/([^/]+)$/);
@@ -72,115 +93,6 @@ function getRoute() {
   }
 
   return { name: 'home' };
-}
-
-function getDateInputValue(date = new Date()) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
-}
-
-function createEmptyHealthEntry(date = getDateInputValue(new Date())) {
-  return {
-    date,
-    steps: 0,
-    running_km: 0,
-    sleep_hours: 0
-  };
-}
-
-function formatMetricNumber(value = 0, options = {}) {
-  return new Intl.NumberFormat('en', {
-    minimumFractionDigits: options.minimumFractionDigits || 0,
-    maximumFractionDigits: options.maximumFractionDigits ?? 1
-  }).format(Number(value || 0));
-}
-
-function getTodayHealthEntry() {
-  return state.health?.today || createEmptyHealthEntry();
-}
-
-function getHealthTimeline(metric) {
-  const weeklyData = Array.isArray(state.health?.weekly) && state.health.weekly.length
-    ? state.health.weekly
-    : Array.from({ length: 7 }, (_, index) => {
-        const date = new Date();
-        date.setHours(0, 0, 0, 0);
-        date.setDate(date.getDate() - (6 - index));
-        return {
-          ...createEmptyHealthEntry(getDateInputValue(date)),
-          label: new Intl.DateTimeFormat('en', { weekday: 'short' }).format(date)
-        };
-      });
-
-  return weeklyData.map((entry) => Number(entry?.[metric] || 0));
-}
-
-function getHealthTrendCopy(metric) {
-  const weekly = Array.isArray(state.health?.weekly) ? state.health.weekly : [];
-  if (weekly.length < 2) {
-    return 'No previous trend yet';
-  }
-
-  const todayValue = Number(weekly[weekly.length - 1]?.[metric] || 0);
-  const yesterdayValue = Number(weekly[weekly.length - 2]?.[metric] || 0);
-  const difference = todayValue - yesterdayValue;
-
-  if (!difference) {
-    return 'Same as yesterday';
-  }
-
-  const formattedDifference = metric === 'steps'
-    ? formatCompactNumber(Math.abs(difference))
-    : formatMetricNumber(Math.abs(difference));
-
-  return `${difference > 0 ? '+' : '-'}${formattedDifference} vs yesterday`;
-}
-
-function renderSparkline(values, color = 'var(--primary)') {
-  const normalizedValues = values.length ? values : [0, 0];
-  const maxValue = Math.max(...normalizedValues, 1);
-  const points = normalizedValues
-    .map((value, index) => {
-      const x = normalizedValues.length === 1 ? 50 : (index / (normalizedValues.length - 1)) * 100;
-      const y = 100 - (Number(value || 0) / maxValue) * 100;
-      return `${x},${y}`;
-    })
-    .join(' ');
-
-  return `
-    <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-      <polyline fill="none" stroke="${color}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" points="${points}"></polyline>
-    </svg>
-  `;
-}
-
-function renderActivityChart(data) {
-  const chartData = Array.isArray(data) && data.length ? data : [];
-  const metrics = ['steps', 'running_km', 'sleep_hours'];
-  const maxByMetric = metrics.reduce((accumulator, metric) => {
-    accumulator[metric] = Math.max(...chartData.map((entry) => Number(entry?.[metric] || 0)), 1);
-    return accumulator;
-  }, {});
-
-  return `
-    <div class="activity-chart">
-      <div class="activity-chart__grid">
-        ${chartData.map((entry) => `
-          <div class="activity-chart__group">
-            <div class="activity-chart__bars">
-              <span class="activity-chart__bar activity-chart__bar--steps" style="height:${Number(entry.steps || 0) ? Math.max(14, (Number(entry.steps || 0) / maxByMetric.steps) * 100) : 0}%"></span>
-              <span class="activity-chart__bar activity-chart__bar--running" style="height:${Number(entry.running_km || 0) ? Math.max(14, (Number(entry.running_km || 0) / maxByMetric.running_km) * 100) : 0}%"></span>
-              <span class="activity-chart__bar activity-chart__bar--sleep" style="height:${Number(entry.sleep_hours || 0) ? Math.max(14, (Number(entry.sleep_hours || 0) / maxByMetric.sleep_hours) * 100) : 0}%"></span>
-            </div>
-            <span class="activity-chart__label">${escapeHtml(entry.label || entry.month || '')}</span>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
 }
 
 function showToast(message, type = 'success') {
@@ -199,7 +111,7 @@ function renderLoadingState(title = 'Loading your sanctuary...') {
     <section class="loading-card">
       <div class="page-heading">
         <h1>${escapeHtml(title)}</h1>
-        <p>Gathering communities, feed activity, and your latest wellness data.</p>
+        <p>Gathering communities, feed activity, and your latest health snapshot.</p>
       </div>
       <div class="stack-grid">
         <div class="loading-shimmer"></div>
@@ -222,6 +134,195 @@ function renderErrorState(message) {
   `;
 }
 
+function getPostAuthor(post) {
+  return post?.user || post?.createdBy || null;
+}
+
+function getPostCommunity(post) {
+  return post?.community || post?.communityId || null;
+}
+
+function getPostTitle(post) {
+  return String(post?.title || '').trim();
+}
+
+function getPostBody(post) {
+  return String(post?.body || post?.description || '').trim();
+}
+
+function getPostImage(post) {
+  return post?.image || post?.photo || '';
+}
+
+function setInlineMessage(element, text, type = 'error') {
+  if (!element) {
+    return;
+  }
+
+  if (!text) {
+    element.textContent = '';
+    element.className = 'inline-message is-hidden';
+    return;
+  }
+
+  element.textContent = text;
+  element.className = type === 'success' ? 'inline-message is-success' : 'inline-message';
+}
+
+function setHelperMessage(message) {
+  elements.postModalHelper.textContent = message;
+}
+
+function setPostImageError(message = '') {
+  elements.postImageError.textContent = message;
+  elements.postImageError.classList.toggle('is-hidden', !message);
+}
+
+function revokePostImagePreview() {
+  if (state.postImagePreviewUrl) {
+    URL.revokeObjectURL(state.postImagePreviewUrl);
+    state.postImagePreviewUrl = '';
+  }
+}
+
+function clearPostImageSelection() {
+  revokePostImagePreview();
+  elements.postImageInput.value = '';
+  elements.postImagePreviewImage.src = '';
+  elements.postImagePreview.classList.add('is-hidden');
+  elements.postImageRemove.classList.add('is-hidden');
+  elements.postImageLabel.textContent = 'Upload image';
+  setPostImageError('');
+}
+
+function populatePostCommunityOptions(selectedCommunityId = '') {
+  const joinedCommunities = getJoinedCommunities();
+  const requestedCommunityId = selectedCommunityId || elements.postCommunityInput.value;
+  const resolvedCommunityId = joinedCommunities.some((community) => community._id === requestedCommunityId)
+    ? requestedCommunityId
+    : joinedCommunities[0]?._id || '';
+
+  elements.postCommunityInput.innerHTML = `
+    <option value="">Choose a community</option>
+    ${joinedCommunities.map((community) => `
+      <option value="${community._id}" ${community._id === resolvedCommunityId ? 'selected' : ''}>
+        ${escapeHtml(community.communityName)}
+      </option>
+    `).join('')}
+  `;
+
+  elements.postCommunityInput.disabled = !joinedCommunities.length || state.postSubmitting;
+  elements.createPostSubmit.disabled = state.postSubmitting || !joinedCommunities.length;
+  setHelperMessage(
+    joinedCommunities.length
+      ? 'Your post will appear instantly at the top of the feed.'
+      : 'Join a community first to unlock posting.'
+  );
+}
+
+function getDefaultPostCommunityId(preferredCommunityId = '') {
+  const joinedCommunities = getJoinedCommunities();
+
+  if (preferredCommunityId && joinedCommunities.some((community) => community._id === preferredCommunityId)) {
+    return preferredCommunityId;
+  }
+
+  const route = getRoute();
+  if (route.name === 'community' && state.currentCommunity?.isJoined) {
+    return state.currentCommunity._id;
+  }
+
+  if (state.feedFilter !== 'all' && joinedCommunities.some((community) => community._id === state.feedFilter)) {
+    return state.feedFilter;
+  }
+
+  return joinedCommunities[0]?._id || '';
+}
+
+function setPostSubmitState(submitting) {
+  state.postSubmitting = submitting;
+  elements.createPostSubmit.disabled = submitting || !getJoinedCommunities().length;
+  elements.createPostSubmit.textContent = submitting ? 'Posting...' : 'Post';
+  elements.postTitleInput.disabled = submitting;
+  elements.postBodyInput.disabled = submitting;
+  elements.postTagsInput.disabled = submitting;
+  elements.postImageInput.disabled = submitting;
+  elements.postImageRemove.disabled = submitting;
+  populatePostCommunityOptions(elements.postCommunityInput.value);
+}
+
+function openPostModal(preselectedCommunityId = '') {
+  if (state.postModalOpen) {
+    return;
+  }
+
+  populatePostCommunityOptions(getDefaultPostCommunityId(preselectedCommunityId));
+  elements.postModal.classList.remove('is-hidden');
+  requestAnimationFrame(() => {
+    state.postModalOpen = true;
+    elements.postModal.classList.add('is-open');
+    elements.postModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('body-scroll-lock');
+    elements.postTitleInput.focus();
+  });
+}
+
+function closePostModal(options = {}) {
+  if (state.postSubmitting && !options.force) {
+    return;
+  }
+
+  if (!state.postModalOpen && elements.postModal.classList.contains('is-hidden')) {
+    return;
+  }
+
+  state.postModalOpen = false;
+  elements.postModal.classList.remove('is-open');
+  elements.postModal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('body-scroll-lock');
+
+  if (!options.preserveDraft) {
+    elements.createPostForm.reset();
+    clearPostImageSelection();
+    setInlineMessage(elements.postModalMessage, '');
+    populatePostCommunityOptions(getDefaultPostCommunityId());
+  }
+
+  window.setTimeout(() => {
+    if (!state.postModalOpen) {
+      elements.postModal.classList.add('is-hidden');
+    }
+  }, 200);
+}
+
+function handlePostImageSelection(file) {
+  if (!file) {
+    clearPostImageSelection();
+    return true;
+  }
+
+  if (!file.type.startsWith('image/')) {
+    clearPostImageSelection();
+    setPostImageError('Please choose an image file.');
+    return false;
+  }
+
+  if (file.size > MAX_POST_IMAGE_BYTES) {
+    clearPostImageSelection();
+    setPostImageError('Image must be 512KB or smaller.');
+    return false;
+  }
+
+  revokePostImagePreview();
+  state.postImagePreviewUrl = URL.createObjectURL(file);
+  elements.postImagePreviewImage.src = state.postImagePreviewUrl;
+  elements.postImagePreview.classList.remove('is-hidden');
+  elements.postImageRemove.classList.remove('is-hidden');
+  elements.postImageLabel.textContent = file.name;
+  setPostImageError('');
+  return true;
+}
+
 function getJoinedCommunities() {
   const joinedIds = new Set((state.profile?.communitiesJoined || []).map((community) => community._id));
   return state.communities.filter((community) => joinedIds.has(community._id));
@@ -232,6 +333,108 @@ function getTrendingCommunities() {
   return state.communities
     .filter((community) => !joinedIds.has(community._id))
     .slice(0, 3);
+}
+
+function getPostCollections() {
+  return [state.homePosts, state.profilePosts, state.communityPosts];
+}
+
+function visitLocalPost(postId, visitor) {
+  const normalizedPostId = String(postId);
+
+  getPostCollections().forEach((posts) => {
+    posts.forEach((post) => {
+      if (post?._id === normalizedPostId) {
+        visitor(post);
+      }
+    });
+  });
+
+  if (state.currentPost?._id === normalizedPostId) {
+    visitor(state.currentPost);
+  }
+}
+
+function getLocalPostSnapshot(postId) {
+  let snapshot = null;
+
+  visitLocalPost(postId, (post) => {
+    if (!snapshot) {
+      snapshot = {
+        likesCount: post.likes || 0,
+        authorId: getPostAuthor(post)?._id || null
+      };
+    }
+  });
+
+  return snapshot || {
+    likesCount: 0,
+    authorId: null
+  };
+}
+
+function updateProfileLikesSummary(delta) {
+  if (!delta) {
+    return;
+  }
+
+  state.profileStats.likesCount = Math.max(0, (state.profileStats.likesCount || 0) + delta);
+
+  const likesNode = elements.profileStatsSidebar.querySelector('[data-profile-likes]');
+  if (likesNode) {
+    likesNode.textContent = formatCompactNumber(state.profileStats.likesCount);
+  }
+}
+
+function syncLikeButtons(postId) {
+  const postSnapshot = getLocalPostSnapshot(postId);
+  const liked = likeManager.isLiked(postId);
+  const pending = likeManager.isPending(postId);
+
+  document
+    .querySelectorAll(`[data-action="like-post"][data-post-id="${postId}"]`)
+    .forEach((button) => {
+      const icon = button.querySelector('.material-symbols-outlined');
+      const count = button.querySelector('[data-like-count]');
+
+      button.classList.toggle('is-active', liked);
+      button.disabled = pending;
+      button.setAttribute('aria-pressed', String(liked));
+
+      if (icon) {
+        icon.style.fontVariationSettings = liked
+          ? "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24"
+          : "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24";
+      }
+
+      if (count) {
+        count.textContent = formatCompactNumber(postSnapshot.likesCount);
+      }
+    });
+}
+
+function applyLikeStateToLocalPosts(postId, liked, likesCount) {
+  let previousLikesCount = null;
+  let affectsCurrentUsersPost = false;
+
+  visitLocalPost(postId, (post) => {
+    if (previousLikesCount === null) {
+      previousLikesCount = post.likes || 0;
+    }
+
+    post.likes = likesCount;
+    post.likedByCurrentUser = liked;
+
+    if (getPostAuthor(post)?._id === state.profile?._id) {
+      affectsCurrentUsersPost = true;
+    }
+  });
+
+  if (previousLikesCount !== null && affectsCurrentUsersPost) {
+    updateProfileLikesSummary(likesCount - previousLikesCount);
+  }
+
+  syncLikeButtons(postId);
 }
 
 function renderSidebar() {
@@ -248,24 +451,46 @@ function renderSidebar() {
       `).join('')
     : '<li><span class="muted-copy">No circles joined yet.</span></li>';
 
-  const health = getTodayHealthEntry();
+  const health = state.health || { waterIntake: 0, waterGoal: 2500, hydrationPercent: 0, steps: 0, stepsPercent: 0 };
   elements.healthSidebar.innerHTML = `
-    <div class="health-mini-grid">
-      <article class="health-mini-card">
-        <span class="health-mini-card__label">Today's Steps</span>
-        <strong>${formatCompactNumber(health.steps)}</strong>
-      </article>
+    <article class="health-card">
+      <div class="progress-line">
+        <span>Daily Water</span>
+        <strong>${escapeHtml(formatWater(health.waterIntake))} / ${escapeHtml(formatWater(health.waterGoal))}</strong>
+      </div>
+      <div class="progress-bar">
+        <span style="width:${health.hydrationPercent}%"></span>
+      </div>
+    </article>
 
-      <article class="health-mini-card">
-        <span class="health-mini-card__label">Running (km)</span>
-        <strong>${formatMetricNumber(health.running_km)}</strong>
-      </article>
-
-      <article class="health-mini-card">
-        <span class="health-mini-card__label">Sleep (hours)</span>
-        <strong>${formatMetricNumber(health.sleep_hours)}</strong>
-      </article>
-    </div>
+    <article class="health-card">
+      <div class="ring-row">
+        <div class="ring__meta">
+          <span class="mini-card__label">Daily Steps</span>
+          <strong>${formatCompactNumber(health.steps)}</strong>
+          <span>${health.stepsPercent}% of ${formatCompactNumber(health.stepsGoal || 10000)} goal</span>
+        </div>
+        <div class="ring">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle cx="60" cy="60" r="48" fill="none" stroke="#e6eaec" stroke-width="10"></circle>
+            <circle
+              cx="60"
+              cy="60"
+              r="48"
+              fill="none"
+              stroke="#0f5238"
+              stroke-width="10"
+              stroke-linecap="round"
+              stroke-dasharray="301.59"
+              stroke-dashoffset="${301.59 - (301.59 * health.stepsPercent) / 100}">
+            </circle>
+          </svg>
+          <div class="ring__icon">
+            <span class="material-symbols-outlined">directions_run</span>
+          </div>
+        </div>
+      </div>
+    </article>
   `;
 
   elements.profileStatsSidebar.innerHTML = `
@@ -279,7 +504,7 @@ function renderSidebar() {
         <span>Circles</span>
       </div>
       <div class="profile-stat">
-        <strong>${formatCompactNumber(state.profileStats.likesCount)}</strong>
+        <strong data-profile-likes>${formatCompactNumber(state.profileStats.likesCount)}</strong>
         <span>Likes</span>
       </div>
     </div>
@@ -306,7 +531,7 @@ function renderSidebar() {
   document.querySelectorAll('.sidebar-nav__item').forEach((item) => {
     item.classList.remove('is-active');
     const route = item.dataset.route;
-    if (route && (window.location.pathname === route || (window.location.pathname === '/health' && route === '/dashboard'))) {
+    if (route && window.location.pathname === route) {
       item.classList.add('is-active');
     }
     if (window.location.pathname.startsWith('/community/') && item.dataset.action === 'open-first-community') {
@@ -316,7 +541,7 @@ function renderSidebar() {
 
   document.querySelectorAll('.mobile-nav__item').forEach((item) => {
     item.classList.remove('is-active');
-    if (item.dataset.route === window.location.pathname || (window.location.pathname === '/health' && item.dataset.route === '/dashboard')) {
+    if (item.dataset.route === window.location.pathname) {
       item.classList.add('is-active');
     }
   });
@@ -326,7 +551,7 @@ function filterPosts(posts) {
   let filteredPosts = posts;
 
   if (state.feedFilter !== 'all') {
-    filteredPosts = filteredPosts.filter((post) => post.communityId?._id === state.feedFilter);
+    filteredPosts = filteredPosts.filter((post) => getPostCommunity(post)?._id === state.feedFilter);
   }
 
   if (state.search.trim()) {
@@ -336,7 +561,36 @@ function filterPosts(posts) {
   return filteredPosts;
 }
 
+function prependUniquePost(posts, post) {
+  const existingIndex = posts.findIndex((item) => item?._id === post._id);
+
+  if (existingIndex !== -1) {
+    posts.splice(existingIndex, 1);
+  }
+
+  posts.unshift(post);
+}
+
+function syncCreatedPost(post) {
+  const communityId = getPostCommunity(post)?._id || '';
+
+  prependUniquePost(state.profilePosts, post);
+  prependUniquePost(state.homePosts, post);
+
+  if (state.currentCommunity?._id === communityId) {
+    prependUniquePost(state.communityPosts, post);
+  }
+
+  state.profileStats.postsCount += 1;
+}
+
 function renderPostCard(post, options = {}) {
+  const author = getPostAuthor(post);
+  const community = getPostCommunity(post);
+  const title = getPostTitle(post);
+  const body = getPostBody(post);
+  const image = getPostImage(post);
+  const isLiked = likeManager.isLiked(post._id);
   const showCommentPreview = options.showCommentPreview !== false;
   const commentPreview = showCommentPreview && post.comments?.length
     ? `
@@ -359,12 +613,12 @@ function renderPostCard(post, options = {}) {
       <div class="post-card__body">
         <div class="post-card__header">
           <div class="post-card__meta">
-            ${renderAvatar(post.createdBy || { name: 'User' })}
+            ${renderAvatar(author || { name: 'User' })}
             <div class="meta-copy">
-              <h3>${escapeHtml(post.createdBy?.name || 'Anonymous')}</h3>
+              <h3>${escapeHtml(author?.name || 'Anonymous')}</h3>
               <p class="meta-line">
                 ${escapeHtml(formatRelativeTime(post.updatedAt || post.createdAt))}
-                ${post.communityId ? `• <strong>${escapeHtml(post.communityId.communityName)}</strong>` : ''}
+                ${community ? `&bull; <strong>${escapeHtml(community.communityName)}</strong>` : ''}
               </p>
             </div>
           </div>
@@ -373,7 +627,10 @@ function renderPostCard(post, options = {}) {
           </button>
         </div>
 
-        <div class="post-card__content">${escapeHtml(post.description)}</div>
+        <div class="post-card__content">
+          ${title ? `<h2 class="post-card__title">${escapeHtml(title)}</h2>` : ''}
+          ${body ? `<p>${escapeHtml(body)}</p>` : ''}
+        </div>
 
         ${post.tags?.length ? `
           <div class="tag-row">
@@ -384,13 +641,13 @@ function renderPostCard(post, options = {}) {
         ` : ''}
       </div>
 
-      ${post.photo ? `<img class="post-card__image" src="${escapeHtml(post.photo)}" alt="${escapeHtml(post.description)}">` : ''}
+      ${image ? `<img class="post-card__image" src="${escapeHtml(image)}" alt="${escapeHtml(title || body || 'Post image')}">` : ''}
 
       <div class="post-card__footer">
         <div class="post-card__actions">
-          <button class="post-action" type="button" data-action="like-post" data-post-id="${post._id}">
-            <span class="material-symbols-outlined">favorite</span>
-            <span>${formatCompactNumber(post.likes || 0)}</span>
+          <button class="post-action ${isLiked ? 'is-active' : ''}" type="button" data-action="like-post" data-post-id="${post._id}" aria-pressed="${String(isLiked)}">
+            <span class="material-symbols-outlined"${isLiked ? ' style="font-variation-settings: \'FILL\' 1, \'wght\' 400, \'GRAD\' 0, \'opsz\' 24;"' : ''}>favorite</span>
+            <span data-like-count>${formatCompactNumber(post.likes || 0)}</span>
           </button>
           <button class="post-action" type="button" data-route="/post/${post._id}">
             <span class="material-symbols-outlined">chat_bubble</span>
@@ -421,75 +678,6 @@ function renderPostFeed(posts, emptyTitle, emptyCopy) {
   }
 
   return `<div class="feed-stack">${posts.map((post) => renderPostCard(post)).join('')}</div>`;
-}
-
-function renderCreatePostSection(preselectedCommunityId = '') {
-  const joinedCommunities = getJoinedCommunities();
-
-  if (!joinedCommunities.length) {
-    return `
-      <section class="empty-state">
-        <h2>Join a circle before posting</h2>
-        <p>Your timeline becomes active once you join a community. Pick a circle from the suggestions below to start sharing.</p>
-      </section>
-    `;
-  }
-
-  return `
-    <section class="composer-card" id="composer-card">
-      <form id="create-post-form">
-        <div class="composer-head">
-          ${renderAvatar(state.profile || { name: 'You' }, 'large')}
-          <textarea class="textarea" name="description" id="composer-textarea" placeholder="Share your wellness journey..." required></textarea>
-        </div>
-
-        <div class="composer-extra-panels">
-          <div class="composer-panel" data-panel="media">
-            <label class="field">
-              <span>Photo URL</span>
-              <input type="url" name="photo" placeholder="Optional image URL">
-            </label>
-          </div>
-
-          <div class="composer-panel" data-panel="details">
-            <div class="field-grid">
-              <label class="field">
-                <span>Community</span>
-                <select name="communityId" required>
-                  <option value="">Choose a community</option>
-                  ${joinedCommunities.map((community) => `
-                    <option value="${community._id}" ${community._id === preselectedCommunityId ? 'selected' : ''}>
-                      ${escapeHtml(community.communityName)}
-                    </option>
-                  `).join('')}
-                </select>
-              </label>
-
-              <label class="field">
-                <span>Tags</span>
-                <input type="text" name="tags" placeholder="e.g. recovery, hydration">
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div class="composer-actions">
-          <div class="toolbar">
-            <button class="sidebar-chip" type="button" data-action="toggle-composer-panel" data-panel="media">
-              <span class="material-symbols-outlined">image</span>
-              <span>Media</span>
-            </button>
-            <button class="sidebar-chip" type="button" data-action="toggle-composer-panel" data-panel="details">
-              <span class="material-symbols-outlined">sell</span>
-              <span>Tags</span>
-            </button>
-          </div>
-
-          <button class="button-primary" type="submit">Post</button>
-        </div>
-      </form>
-    </section>
-  `;
 }
 
 function renderCommunitySuggestions() {
@@ -536,8 +724,6 @@ function renderHomeView() {
       <h1>Soft, social, and centered on your wellness rhythm.</h1>
       <p>The feed stays true to the Stitch reference while pulling real posts from the communities you have joined.</p>
     </section>
-
-    ${renderCreatePostSection()}
 
     <div class="filter-row">
       <button class="filter-pill ${state.feedFilter === 'all' ? 'is-active' : ''}" type="button" data-filter-community="all">All Feed</button>
@@ -587,14 +773,9 @@ function renderProfileView() {
           </label>
         </div>
 
-        <label class="field">
-          <span>Profile image URL</span>
-          <input type="url" name="profilePicture" value="${escapeHtml(state.profile?.profilePicture || '')}" placeholder="Optional image URL">
-        </label>
-
         <div class="health-inline-actions">
           <button class="button-primary" type="submit">Save profile</button>
-          <span class="helper-text">Updates sync straight to MongoDB and refresh the shell instantly.</span>
+          <span class="helper-text">Your initials are now used automatically anywhere an avatar appears.</span>
         </div>
       </form>
     </section>
@@ -637,12 +818,12 @@ function renderCommunityView() {
         </button>
       </div>
 
-      ${community.isJoined ? renderCreatePostSection(community._id) : `
+      ${!community.isJoined ? `
         <div class="empty-state">
           <h3>Join before you post</h3>
           <p>This keeps the feed relevant and matches the community-first data relationships in the provided schemas.</p>
         </div>
-      `}
+      ` : ''}
     </section>
 
     ${renderPostFeed(posts, 'No posts in this circle yet', 'Be the first person to share an update in this community.')}
@@ -709,153 +890,97 @@ function renderPostDetailView() {
   `;
 }
 
-function renderDashboardView() {
-  const health = getTodayHealthEntry();
-  const chartData = state.healthRange === 'yearly' ? state.health.yearly : state.health.weekly;
-  const chartCopy = state.healthRange === 'weekly'
-    ? 'Daily tracked data visualization for the last seven days.'
-    : 'Monthly average activity across the current year.';
-  const statsCards = [
-    {
-      label: 'Walking',
-      unit: 'Steps today',
-      value: formatCompactNumber(health.steps),
-      metric: 'steps',
-      icon: 'directions_walk'
-    },
-    {
-      label: 'Running',
-      unit: 'Distance (km)',
-      value: formatMetricNumber(health.running_km),
-      metric: 'running_km',
-      icon: 'directions_run'
-    },
-    {
-      label: 'Sleep',
-      unit: 'Hours slept',
-      value: formatMetricNumber(health.sleep_hours),
-      metric: 'sleep_hours',
-      icon: 'bedtime'
-    }
-  ];
+function renderHealthView() {
+  const health = state.health || { waterIntake: 0, waterGoal: 2500, hydrationPercent: 0, steps: 0, stepsPercent: 0, stepsGoal: 10000 };
 
   elements.viewRoot.innerHTML = `
-    <section class="dashboard-shell">
+    <section class="health-layout">
       <div class="page-heading">
-        <h1>Dashboard</h1>
-        <p>Use the dashboard for detailed activity analytics, daily logging, and progress review while the homepage stays lightweight.</p>
+        <h1>Health tracker</h1>
+        <p>Water intake, water goal, and steps are persisted in the dedicated HealthTracker model linked to your user account.</p>
       </div>
 
-      <div class="dashboard-grid">
-        <article class="activity-panel">
-          <div class="activity-panel__header">
-            <div>
-              <h2>Health Activity</h2>
-              <p>${escapeHtml(chartCopy)}</p>
-            </div>
-
-            <div class="activity-toggle" role="tablist" aria-label="Health activity range">
-              <button class="activity-toggle__button ${state.healthRange === 'weekly' ? 'is-active' : ''}" type="button" data-action="set-health-range" data-range="weekly">Weekly</button>
-              <button class="activity-toggle__button ${state.healthRange === 'yearly' ? 'is-active' : ''}" type="button" data-action="set-health-range" data-range="yearly">Yearly</button>
-            </div>
+      <div class="health-grid">
+        <article class="health-card">
+          <div class="progress-line">
+            <span>Water progress</span>
+            <strong>${escapeHtml(formatWater(health.waterIntake))} / ${escapeHtml(formatWater(health.waterGoal))}</strong>
           </div>
-
-          ${renderActivityChart(chartData)}
-
-          <div class="activity-legend">
-            <span class="activity-legend__item">
-              <span class="activity-legend__dot activity-legend__dot--steps"></span>
-              <span>Walking</span>
-            </span>
-            <span class="activity-legend__item">
-              <span class="activity-legend__dot activity-legend__dot--running"></span>
-              <span>Running</span>
-            </span>
-            <span class="activity-legend__item">
-              <span class="activity-legend__dot activity-legend__dot--sleep"></span>
-              <span>Sleep</span>
-            </span>
+          <div class="progress-bar">
+            <span style="width:${health.hydrationPercent}%"></span>
           </div>
+          <p>${health.hydrationPercent}% of your hydration goal reached.</p>
         </article>
 
-        <div class="dashboard-side-stack">
-          <article class="dashboard-input-card">
-            <div class="detail-card__header">
-              <div>
-                <h2>Log Daily Activity</h2>
-                <p class="muted-copy">Save today&apos;s walking, running, and sleep data to keep the dashboard in sync.</p>
+        <article class="health-card">
+          <div class="ring-row">
+            <div class="ring__meta">
+              <span class="mini-card__label">Daily Steps</span>
+              <strong>${formatCompactNumber(health.steps)}</strong>
+              <span>${health.stepsPercent}% of ${formatCompactNumber(health.stepsGoal)} goal</span>
+            </div>
+            <div class="ring">
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <circle cx="60" cy="60" r="48" fill="none" stroke="#e6eaec" stroke-width="10"></circle>
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="48"
+                  fill="none"
+                  stroke="#0f5238"
+                  stroke-width="10"
+                  stroke-linecap="round"
+                  stroke-dasharray="301.59"
+                  stroke-dashoffset="${301.59 - (301.59 * health.stepsPercent) / 100}">
+                </circle>
+              </svg>
+              <div class="ring__icon">
+                <span class="material-symbols-outlined">monitoring</span>
               </div>
             </div>
-
-            <form id="health-log-form" class="dashboard-form">
-              <input type="hidden" name="date" value="${escapeHtml(String(health.date || getDateInputValue(new Date())))}">
-
-              <label class="dashboard-input">
-                <span class="dashboard-input__icon material-symbols-outlined">directions_walk</span>
-                <span class="dashboard-input__copy">
-                  <strong>Walking (steps)</strong>
-                  <input type="number" min="0" name="steps" value="${escapeHtml(String(health.steps || 0))}" placeholder="e.g. 8000" required>
-                </span>
-              </label>
-
-              <label class="dashboard-input">
-                <span class="dashboard-input__icon material-symbols-outlined">directions_run</span>
-                <span class="dashboard-input__copy">
-                  <strong>Running (km)</strong>
-                  <input type="number" min="0" step="0.1" name="running_km" value="${escapeHtml(String(health.running_km || 0))}" placeholder="e.g. 5.2" required>
-                </span>
-              </label>
-
-              <label class="dashboard-input">
-                <span class="dashboard-input__icon material-symbols-outlined">bedtime</span>
-                <span class="dashboard-input__copy">
-                  <strong>Sleep (hours)</strong>
-                  <input type="number" min="0" step="0.1" name="sleep_hours" value="${escapeHtml(String(health.sleep_hours || 0))}" placeholder="e.g. 8" required>
-                </span>
-              </label>
-
-              <button class="button-primary dashboard-form__submit" type="submit">Save Activity</button>
-            </form>
-          </article>
-
-          <section class="dashboard-daily-stats">
-            <div class="detail-card__header">
-              <div>
-                <h2>Daily Stats</h2>
-                <p class="muted-copy">Today&apos;s values with recent trend lines.</p>
-              </div>
-            </div>
-
-            <div class="daily-stats-grid">
-              ${statsCards.map((card) => `
-                <article class="daily-stat-card">
-                  <div class="daily-stat-card__header">
-                    <span class="daily-stat-card__icon material-symbols-outlined">${card.icon}</span>
-                    <div>
-                      <h3>${escapeHtml(card.label)}</h3>
-                      <p>${escapeHtml(card.unit)}</p>
-                    </div>
-                  </div>
-                  <div class="daily-stat-card__value-row">
-                    <strong>${escapeHtml(card.value)}</strong>
-                    <span>${escapeHtml(getHealthTrendCopy(card.metric))}</span>
-                  </div>
-                  <div class="sparkline">
-                    ${renderSparkline(getHealthTimeline(card.metric))}
-                  </div>
-                </article>
-              `).join('')}
-            </div>
-          </section>
-        </div>
+          </div>
+        </article>
       </div>
+
+      <article class="detail-card">
+        <div class="detail-card__header">
+          <div>
+            <h2>Update daily metrics</h2>
+            <p class="muted-copy">Adjust your hydration goal or log the latest numbers from your day.</p>
+          </div>
+        </div>
+
+        <form id="health-form" class="health-form">
+          <div class="field-grid">
+            <label class="field">
+              <span>Water intake (ml)</span>
+              <input type="number" min="0" name="waterIntake" value="${escapeHtml(String(health.waterIntake || 0))}" required>
+            </label>
+
+            <label class="field">
+              <span>Water goal (ml)</span>
+              <input type="number" min="0" name="waterGoal" value="${escapeHtml(String(health.waterGoal || 0))}" required>
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Steps</span>
+            <input type="number" min="0" name="steps" value="${escapeHtml(String(health.steps || 0))}" required>
+          </label>
+
+          <div class="health-inline-actions">
+            <button class="button-primary" type="submit">Save metrics</button>
+            <button class="soft-button" type="button" data-action="health-quick-add" data-field="waterIntake" data-amount="250">+250 ml</button>
+            <button class="soft-button" type="button" data-action="health-quick-add" data-field="steps" data-amount="500">+500 steps</button>
+          </div>
+        </form>
+      </article>
     </section>
   `;
 }
 
 function renderCurrentView() {
   const route = getRoute();
-  elements.viewRoot.className = route.name === 'dashboard' ? 'view-root view-root--dashboard' : 'view-root';
 
   if (route.name === 'home') {
     renderHomeView();
@@ -877,36 +1002,29 @@ function renderCurrentView() {
     return;
   }
 
-  if (route.name === 'dashboard') {
-    renderDashboardView();
+  if (route.name === 'health') {
+    renderHealthView();
   }
 }
 
-async function loadHealthData() {
-  const [todayData, weeklyData, yearlyData] = await Promise.all([
-    apiFetch('/api/health/today'),
-    apiFetch('/api/health/weekly'),
-    apiFetch('/api/health/yearly')
-  ]);
+async function loadShellData(options = {}) {
+  if (state.shellHydrated && !options.force) {
+    return;
+  }
 
-  state.health = {
-    today: todayData.health || createEmptyHealthEntry(),
-    weekly: Array.isArray(weeklyData.data) ? weeklyData.data : [],
-    yearly: Array.isArray(yearlyData.data) ? yearlyData.data : []
-  };
-}
-
-async function loadShellData() {
-  const [profileData, communitiesData] = await Promise.all([
+  const [profileData, communitiesData, healthData] = await Promise.all([
     apiFetch('/api/users/profile'),
     apiFetch('/api/communities'),
-    loadHealthData()
+    apiFetch('/api/health')
   ]);
 
   state.profile = profileData.user;
   state.profilePosts = profileData.posts;
   state.profileStats = profileData.stats;
   state.communities = communitiesData.communities;
+  state.health = healthData.health;
+  likeManager.replaceLikedPosts(profileData.user?.likedPosts || []);
+  state.shellHydrated = true;
 
   const validCommunityIds = new Set(getJoinedCommunities().map((community) => community._id));
   if (state.feedFilter !== 'all' && !validCommunityIds.has(state.feedFilter)) {
@@ -947,7 +1065,7 @@ async function refreshView(options = {}) {
   }
 
   try {
-    await loadShellData();
+    await loadShellData({ force: options.refreshShell });
     await loadViewData();
     renderSidebar();
     renderCurrentView();
@@ -988,50 +1106,104 @@ async function handleJoinCommunity(communityId) {
     });
 
     showToast('Community joined successfully.');
-    await refreshView({ skipLoading: true });
+    await refreshView({ skipLoading: true, refreshShell: true });
   } catch (error) {
     showToast(error.message, 'error');
   }
 }
 
 async function handleLikePost(postId) {
+  const snapshot = getLocalPostSnapshot(postId);
+  const optimisticState = likeManager.beginOptimisticToggle(postId, snapshot.likesCount);
+
+  if (!optimisticState) {
+    return;
+  }
+
+  applyLikeStateToLocalPosts(postId, optimisticState.liked, optimisticState.likesCount);
+
   try {
-    await apiFetch(`/api/posts/${postId}/like`, {
-      method: 'POST'
+    const response = await apiFetch(`/api/posts/${postId}/like`, {
+      method: 'POST',
+      body: JSON.stringify({
+        liked: optimisticState.liked
+      })
     });
 
-    await refreshView({ skipLoading: true });
+    const confirmedState = likeManager.confirm(response.postId, response.liked, response.likesCount);
+    applyLikeStateToLocalPosts(response.postId, confirmedState.liked, confirmedState.likesCount);
   } catch (error) {
+    const rollbackState = likeManager.rollback(postId);
+
+    if (rollbackState) {
+      applyLikeStateToLocalPosts(postId, rollbackState.liked, rollbackState.likesCount);
+    }
+
     showToast(error.message, 'error');
   }
 }
 
 async function handleCreatePost(form) {
-  const submitButton = form.querySelector('button[type="submit"]');
-  submitButton.disabled = true;
-  submitButton.textContent = 'Posting...';
+  if (state.postSubmitting) {
+    return;
+  }
+
+  setInlineMessage(elements.postModalMessage, '');
+  setPostImageError('');
+
+  const title = String(elements.postTitleInput.value || '').trim();
+  const body = String(elements.postBodyInput.value || '').trim();
+  const community = String(elements.postCommunityInput.value || '').trim();
+  const selectedFile = elements.postImageInput.files?.[0] || null;
+
+  if (!getJoinedCommunities().length) {
+    setInlineMessage(elements.postModalMessage, 'Join a community before creating a post.');
+    return;
+  }
+
+  if (!community) {
+    setInlineMessage(elements.postModalMessage, 'Choose a community for this post.');
+    elements.postCommunityInput.focus();
+    return;
+  }
+
+  if (!title || !body) {
+    setInlineMessage(elements.postModalMessage, 'Title and body are required.');
+    (!title ? elements.postTitleInput : elements.postBodyInput).focus();
+    return;
+  }
+
+  if (selectedFile && !handlePostImageSelection(selectedFile)) {
+    return;
+  }
+
+  const formData = new FormData(form);
+  formData.set('title', title);
+  formData.set('body', body);
+  formData.set('community', community);
+  formData.set('tags', String(formData.get('tags') || '').trim());
+
+  if (!selectedFile) {
+    formData.delete('image');
+  }
+
+  setPostSubmitState(true);
 
   try {
-    const formData = new FormData(form);
-
-    await apiFetch('/api/posts', {
+    const response = await apiFetch('/api/posts', {
       method: 'POST',
-      body: JSON.stringify({
-        description: formData.get('description'),
-        photo: formData.get('photo'),
-        tags: formData.get('tags'),
-        communityId: formData.get('communityId')
-      })
+      body: formData
     });
 
-    showToast('Post published.');
-    form.reset();
-    await refreshView({ skipLoading: true });
+    syncCreatedPost(response.post);
+    renderSidebar();
+    renderCurrentView();
+    closePostModal({ force: true });
+    showToast('Post shared successfully.');
   } catch (error) {
-    showToast(error.message, 'error');
+    setInlineMessage(elements.postModalMessage, error.message);
   } finally {
-    submitButton.disabled = false;
-    submitButton.textContent = 'Post';
+    setPostSubmitState(false);
   }
 }
 
@@ -1047,13 +1219,12 @@ async function handleProfileUpdate(form) {
       method: 'PUT',
       body: JSON.stringify({
         name: formData.get('name'),
-        username: formData.get('username'),
-        profilePicture: formData.get('profilePicture')
+        username: formData.get('username')
       })
     });
 
     showToast('Profile updated.');
-    await refreshView({ skipLoading: true });
+    await refreshView({ skipLoading: true, refreshShell: true });
   } catch (error) {
     showToast(error.message, 'error');
   } finally {
@@ -1089,7 +1260,7 @@ async function handleComment(form) {
   }
 }
 
-async function handleHealthLog(form) {
+async function handleHealthUpdate(form) {
   const submitButton = form.querySelector('button[type="submit"]');
   submitButton.disabled = true;
   submitButton.textContent = 'Saving...';
@@ -1097,25 +1268,22 @@ async function handleHealthLog(form) {
   try {
     const formData = new FormData(form);
 
-    await apiFetch('/api/health/log', {
-      method: 'POST',
+    await apiFetch('/api/health', {
+      method: 'PUT',
       body: JSON.stringify({
-        date: formData.get('date'),
-        steps: Number(formData.get('steps')),
-        running_km: Number(formData.get('running_km')),
-        sleep_hours: Number(formData.get('sleep_hours'))
+        waterIntake: Number(formData.get('waterIntake')),
+        waterGoal: Number(formData.get('waterGoal')),
+        steps: Number(formData.get('steps'))
       })
     });
 
-    await loadHealthData();
-    renderSidebar();
-    renderCurrentView();
-    showToast('Daily activity saved.');
+    showToast('Health metrics updated.');
+    await refreshView({ skipLoading: true, refreshShell: true });
   } catch (error) {
     showToast(error.message, 'error');
   } finally {
     submitButton.disabled = false;
-    submitButton.textContent = 'Save Activity';
+    submitButton.textContent = 'Save metrics';
   }
 }
 
@@ -1127,24 +1295,6 @@ async function handleSignOut() {
   } finally {
     window.location.href = '/sign-in';
   }
-}
-
-function toggleComposerPanel(panelName) {
-  const panel = document.querySelector(`.composer-panel[data-panel="${panelName}"]`);
-  if (panel) {
-    panel.classList.toggle('is-open');
-  }
-}
-
-function focusComposer() {
-  if (window.location.pathname !== '/') {
-    navigateTo('/').then(() => {
-      document.getElementById('composer-textarea')?.focus();
-    });
-    return;
-  }
-
-  document.getElementById('composer-textarea')?.focus();
 }
 
 function openFirstCommunity() {
@@ -1207,13 +1357,18 @@ document.addEventListener('click', async (event) => {
     return;
   }
 
-  if (action === 'toggle-composer-panel') {
-    toggleComposerPanel(actionButton.dataset.panel);
+  if (action === 'open-post-modal') {
+    openPostModal(actionButton.dataset.communityId || '');
     return;
   }
 
-  if (action === 'focus-composer') {
-    focusComposer();
+  if (action === 'dismiss-post-modal') {
+    closePostModal();
+    return;
+  }
+
+  if (action === 'remove-post-image') {
+    clearPostImageSelection();
     return;
   }
 
@@ -1222,9 +1377,13 @@ document.addEventListener('click', async (event) => {
     return;
   }
 
-  if (action === 'set-health-range') {
-    state.healthRange = actionButton.dataset.range === 'yearly' ? 'yearly' : 'weekly';
-    renderCurrentView();
+  if (action === 'health-quick-add') {
+    const form = document.getElementById('health-form');
+    if (!form) {
+      return;
+    }
+    const field = form.elements[actionButton.dataset.field];
+    field.value = Number(field.value || 0) + Number(actionButton.dataset.amount || 0);
   }
 });
 
@@ -1244,9 +1403,9 @@ document.addEventListener('submit', async (event) => {
     await handleComment(event.target);
   }
 
-  if (event.target.id === 'health-log-form') {
+  if (event.target.id === 'health-form') {
     event.preventDefault();
-    await handleHealthLog(event.target);
+    await handleHealthUpdate(event.target);
   }
 });
 
@@ -1261,6 +1420,16 @@ elements.signOutButton.addEventListener('click', handleSignOut);
 elements.searchInput.addEventListener('input', (event) => {
   state.search = event.target.value;
   renderCurrentView();
+});
+
+elements.postImageInput.addEventListener('change', (event) => {
+  handlePostImageSelection(event.target.files?.[0] || null);
+});
+
+window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && state.postModalOpen) {
+    closePostModal();
+  }
 });
 
 window.addEventListener('popstate', () => {
