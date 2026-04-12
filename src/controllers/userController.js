@@ -9,7 +9,6 @@ function buildUserResponse(user) {
   return {
     _id: user._id,
     name: user.name,
-    profilePicture: user.profilePicture,
     email: user.email,
     username: user.username,
     posts: user.posts,
@@ -20,7 +19,7 @@ function buildUserResponse(user) {
 
 const getProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id)
-    .select('name profilePicture email username posts likedPosts communitiesJoined')
+    .select('name email username posts likedPosts communitiesJoined')
     .populate(
     'communitiesJoined',
     'communityName description noOfActiveMembers communityPhoto'
@@ -31,7 +30,12 @@ const getProfile = asyncHandler(async (req, res) => {
   }
 
   const rawPosts = await buildPostQuery(
-    Post.find({ createdBy: user._id }).sort({ createdAt: -1 })
+    Post.find({
+      $or: [
+        { user: user._id },
+        { createdBy: user._id }
+      ]
+    }).sort({ createdAt: -1 })
   );
 
   const posts = await decoratePostsForUser(rawPosts, req.user._id);
@@ -62,10 +66,6 @@ const updateProfile = asyncHandler(async (req, res) => {
 
   if (req.body.name !== undefined) {
     updates.name = ensureOptionalString(req.body.name, { min: 2, max: 60 });
-  }
-
-  if (req.body.profilePicture !== undefined) {
-    updates.profilePicture = ensureOptionalString(req.body.profilePicture, { max: 1000 });
   }
 
   if (req.body.username !== undefined) {

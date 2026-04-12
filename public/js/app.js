@@ -10,6 +10,8 @@ import {
 } from './helpers.js';
 import { createPostLikeManager } from './postLikeManager.js';
 
+const MAX_POST_IMAGE_BYTES = 512 * 1024;
+
 const state = {
   profile: null,
   profilePosts: [],
@@ -25,6 +27,9 @@ const state = {
   currentCommunity: null,
   communityPosts: [],
   currentPost: null,
+  postModalOpen: false,
+  postSubmitting: false,
+  postImagePreviewUrl: '',
   shellHydrated: false,
   search: '',
   feedFilter: 'all'
@@ -43,7 +48,23 @@ const elements = {
   profileMenuButton: document.getElementById('profile-menu-button'),
   profileMenu: document.getElementById('profile-menu'),
   signOutButton: document.getElementById('sign-out-button'),
-  toastStack: document.getElementById('toast-stack')
+  toastStack: document.getElementById('toast-stack'),
+  postModal: document.getElementById('post-modal'),
+  postModalDialog: document.getElementById('post-modal-dialog'),
+  createPostForm: document.getElementById('create-post-form'),
+  createPostSubmit: document.getElementById('create-post-submit'),
+  postModalMessage: document.getElementById('post-modal-message'),
+  postModalHelper: document.getElementById('post-modal-helper'),
+  postTitleInput: document.getElementById('post-title-input'),
+  postBodyInput: document.getElementById('post-body-input'),
+  postCommunityInput: document.getElementById('post-community-input'),
+  postTagsInput: document.getElementById('post-tags-input'),
+  postImageInput: document.getElementById('post-image-input'),
+  postImageLabel: document.getElementById('post-image-label'),
+  postImageError: document.getElementById('post-image-error'),
+  postImagePreview: document.getElementById('post-image-preview'),
+  postImagePreviewImage: document.getElementById('post-image-preview-image'),
+  postImageRemove: document.getElementById('post-image-remove')
 };
 
 function getRoute() {
@@ -113,6 +134,195 @@ function renderErrorState(message) {
   `;
 }
 
+function getPostAuthor(post) {
+  return post?.user || post?.createdBy || null;
+}
+
+function getPostCommunity(post) {
+  return post?.community || post?.communityId || null;
+}
+
+function getPostTitle(post) {
+  return String(post?.title || '').trim();
+}
+
+function getPostBody(post) {
+  return String(post?.body || post?.description || '').trim();
+}
+
+function getPostImage(post) {
+  return post?.image || post?.photo || '';
+}
+
+function setInlineMessage(element, text, type = 'error') {
+  if (!element) {
+    return;
+  }
+
+  if (!text) {
+    element.textContent = '';
+    element.className = 'inline-message is-hidden';
+    return;
+  }
+
+  element.textContent = text;
+  element.className = type === 'success' ? 'inline-message is-success' : 'inline-message';
+}
+
+function setHelperMessage(message) {
+  elements.postModalHelper.textContent = message;
+}
+
+function setPostImageError(message = '') {
+  elements.postImageError.textContent = message;
+  elements.postImageError.classList.toggle('is-hidden', !message);
+}
+
+function revokePostImagePreview() {
+  if (state.postImagePreviewUrl) {
+    URL.revokeObjectURL(state.postImagePreviewUrl);
+    state.postImagePreviewUrl = '';
+  }
+}
+
+function clearPostImageSelection() {
+  revokePostImagePreview();
+  elements.postImageInput.value = '';
+  elements.postImagePreviewImage.src = '';
+  elements.postImagePreview.classList.add('is-hidden');
+  elements.postImageRemove.classList.add('is-hidden');
+  elements.postImageLabel.textContent = 'Upload image';
+  setPostImageError('');
+}
+
+function populatePostCommunityOptions(selectedCommunityId = '') {
+  const joinedCommunities = getJoinedCommunities();
+  const requestedCommunityId = selectedCommunityId || elements.postCommunityInput.value;
+  const resolvedCommunityId = joinedCommunities.some((community) => community._id === requestedCommunityId)
+    ? requestedCommunityId
+    : joinedCommunities[0]?._id || '';
+
+  elements.postCommunityInput.innerHTML = `
+    <option value="">Choose a community</option>
+    ${joinedCommunities.map((community) => `
+      <option value="${community._id}" ${community._id === resolvedCommunityId ? 'selected' : ''}>
+        ${escapeHtml(community.communityName)}
+      </option>
+    `).join('')}
+  `;
+
+  elements.postCommunityInput.disabled = !joinedCommunities.length || state.postSubmitting;
+  elements.createPostSubmit.disabled = state.postSubmitting || !joinedCommunities.length;
+  setHelperMessage(
+    joinedCommunities.length
+      ? 'Your post will appear instantly at the top of the feed.'
+      : 'Join a community first to unlock posting.'
+  );
+}
+
+function getDefaultPostCommunityId(preferredCommunityId = '') {
+  const joinedCommunities = getJoinedCommunities();
+
+  if (preferredCommunityId && joinedCommunities.some((community) => community._id === preferredCommunityId)) {
+    return preferredCommunityId;
+  }
+
+  const route = getRoute();
+  if (route.name === 'community' && state.currentCommunity?.isJoined) {
+    return state.currentCommunity._id;
+  }
+
+  if (state.feedFilter !== 'all' && joinedCommunities.some((community) => community._id === state.feedFilter)) {
+    return state.feedFilter;
+  }
+
+  return joinedCommunities[0]?._id || '';
+}
+
+function setPostSubmitState(submitting) {
+  state.postSubmitting = submitting;
+  elements.createPostSubmit.disabled = submitting || !getJoinedCommunities().length;
+  elements.createPostSubmit.textContent = submitting ? 'Posting...' : 'Post';
+  elements.postTitleInput.disabled = submitting;
+  elements.postBodyInput.disabled = submitting;
+  elements.postTagsInput.disabled = submitting;
+  elements.postImageInput.disabled = submitting;
+  elements.postImageRemove.disabled = submitting;
+  populatePostCommunityOptions(elements.postCommunityInput.value);
+}
+
+function openPostModal(preselectedCommunityId = '') {
+  if (state.postModalOpen) {
+    return;
+  }
+
+  populatePostCommunityOptions(getDefaultPostCommunityId(preselectedCommunityId));
+  elements.postModal.classList.remove('is-hidden');
+  requestAnimationFrame(() => {
+    state.postModalOpen = true;
+    elements.postModal.classList.add('is-open');
+    elements.postModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('body-scroll-lock');
+    elements.postTitleInput.focus();
+  });
+}
+
+function closePostModal(options = {}) {
+  if (state.postSubmitting && !options.force) {
+    return;
+  }
+
+  if (!state.postModalOpen && elements.postModal.classList.contains('is-hidden')) {
+    return;
+  }
+
+  state.postModalOpen = false;
+  elements.postModal.classList.remove('is-open');
+  elements.postModal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('body-scroll-lock');
+
+  if (!options.preserveDraft) {
+    elements.createPostForm.reset();
+    clearPostImageSelection();
+    setInlineMessage(elements.postModalMessage, '');
+    populatePostCommunityOptions(getDefaultPostCommunityId());
+  }
+
+  window.setTimeout(() => {
+    if (!state.postModalOpen) {
+      elements.postModal.classList.add('is-hidden');
+    }
+  }, 200);
+}
+
+function handlePostImageSelection(file) {
+  if (!file) {
+    clearPostImageSelection();
+    return true;
+  }
+
+  if (!file.type.startsWith('image/')) {
+    clearPostImageSelection();
+    setPostImageError('Please choose an image file.');
+    return false;
+  }
+
+  if (file.size > MAX_POST_IMAGE_BYTES) {
+    clearPostImageSelection();
+    setPostImageError('Image must be 512KB or smaller.');
+    return false;
+  }
+
+  revokePostImagePreview();
+  state.postImagePreviewUrl = URL.createObjectURL(file);
+  elements.postImagePreviewImage.src = state.postImagePreviewUrl;
+  elements.postImagePreview.classList.remove('is-hidden');
+  elements.postImageRemove.classList.remove('is-hidden');
+  elements.postImageLabel.textContent = file.name;
+  setPostImageError('');
+  return true;
+}
+
 function getJoinedCommunities() {
   const joinedIds = new Set((state.profile?.communitiesJoined || []).map((community) => community._id));
   return state.communities.filter((community) => joinedIds.has(community._id));
@@ -152,7 +362,7 @@ function getLocalPostSnapshot(postId) {
     if (!snapshot) {
       snapshot = {
         likesCount: post.likes || 0,
-        authorId: post.createdBy?._id || null
+        authorId: getPostAuthor(post)?._id || null
       };
     }
   });
@@ -215,7 +425,7 @@ function applyLikeStateToLocalPosts(postId, liked, likesCount) {
     post.likes = likesCount;
     post.likedByCurrentUser = liked;
 
-    if (post.createdBy?._id === state.profile?._id) {
+    if (getPostAuthor(post)?._id === state.profile?._id) {
       affectsCurrentUsersPost = true;
     }
   });
@@ -341,7 +551,7 @@ function filterPosts(posts) {
   let filteredPosts = posts;
 
   if (state.feedFilter !== 'all') {
-    filteredPosts = filteredPosts.filter((post) => post.communityId?._id === state.feedFilter);
+    filteredPosts = filteredPosts.filter((post) => getPostCommunity(post)?._id === state.feedFilter);
   }
 
   if (state.search.trim()) {
@@ -351,7 +561,35 @@ function filterPosts(posts) {
   return filteredPosts;
 }
 
+function prependUniquePost(posts, post) {
+  const existingIndex = posts.findIndex((item) => item?._id === post._id);
+
+  if (existingIndex !== -1) {
+    posts.splice(existingIndex, 1);
+  }
+
+  posts.unshift(post);
+}
+
+function syncCreatedPost(post) {
+  const communityId = getPostCommunity(post)?._id || '';
+
+  prependUniquePost(state.profilePosts, post);
+  prependUniquePost(state.homePosts, post);
+
+  if (state.currentCommunity?._id === communityId) {
+    prependUniquePost(state.communityPosts, post);
+  }
+
+  state.profileStats.postsCount += 1;
+}
+
 function renderPostCard(post, options = {}) {
+  const author = getPostAuthor(post);
+  const community = getPostCommunity(post);
+  const title = getPostTitle(post);
+  const body = getPostBody(post);
+  const image = getPostImage(post);
   const isLiked = likeManager.isLiked(post._id);
   const showCommentPreview = options.showCommentPreview !== false;
   const commentPreview = showCommentPreview && post.comments?.length
@@ -375,12 +613,12 @@ function renderPostCard(post, options = {}) {
       <div class="post-card__body">
         <div class="post-card__header">
           <div class="post-card__meta">
-            ${renderAvatar(post.createdBy || { name: 'User' })}
+            ${renderAvatar(author || { name: 'User' })}
             <div class="meta-copy">
-              <h3>${escapeHtml(post.createdBy?.name || 'Anonymous')}</h3>
+              <h3>${escapeHtml(author?.name || 'Anonymous')}</h3>
               <p class="meta-line">
                 ${escapeHtml(formatRelativeTime(post.updatedAt || post.createdAt))}
-                ${post.communityId ? `• <strong>${escapeHtml(post.communityId.communityName)}</strong>` : ''}
+                ${community ? `&bull; <strong>${escapeHtml(community.communityName)}</strong>` : ''}
               </p>
             </div>
           </div>
@@ -389,7 +627,10 @@ function renderPostCard(post, options = {}) {
           </button>
         </div>
 
-        <div class="post-card__content">${escapeHtml(post.description)}</div>
+        <div class="post-card__content">
+          ${title ? `<h2 class="post-card__title">${escapeHtml(title)}</h2>` : ''}
+          ${body ? `<p>${escapeHtml(body)}</p>` : ''}
+        </div>
 
         ${post.tags?.length ? `
           <div class="tag-row">
@@ -400,7 +641,7 @@ function renderPostCard(post, options = {}) {
         ` : ''}
       </div>
 
-      ${post.photo ? `<img class="post-card__image" src="${escapeHtml(post.photo)}" alt="${escapeHtml(post.description)}">` : ''}
+      ${image ? `<img class="post-card__image" src="${escapeHtml(image)}" alt="${escapeHtml(title || body || 'Post image')}">` : ''}
 
       <div class="post-card__footer">
         <div class="post-card__actions">
@@ -437,75 +678,6 @@ function renderPostFeed(posts, emptyTitle, emptyCopy) {
   }
 
   return `<div class="feed-stack">${posts.map((post) => renderPostCard(post)).join('')}</div>`;
-}
-
-function renderCreatePostSection(preselectedCommunityId = '') {
-  const joinedCommunities = getJoinedCommunities();
-
-  if (!joinedCommunities.length) {
-    return `
-      <section class="empty-state">
-        <h2>Join a circle before posting</h2>
-        <p>Your timeline becomes active once you join a community. Pick a circle from the suggestions below to start sharing.</p>
-      </section>
-    `;
-  }
-
-  return `
-    <section class="composer-card" id="composer-card">
-      <form id="create-post-form">
-        <div class="composer-head">
-          ${renderAvatar(state.profile || { name: 'You' }, 'large')}
-          <textarea class="textarea" name="description" id="composer-textarea" placeholder="Share your wellness journey..." required></textarea>
-        </div>
-
-        <div class="composer-extra-panels">
-          <div class="composer-panel" data-panel="media">
-            <label class="field">
-              <span>Photo URL</span>
-              <input type="url" name="photo" placeholder="Optional image URL">
-            </label>
-          </div>
-
-          <div class="composer-panel" data-panel="details">
-            <div class="field-grid">
-              <label class="field">
-                <span>Community</span>
-                <select name="communityId" required>
-                  <option value="">Choose a community</option>
-                  ${joinedCommunities.map((community) => `
-                    <option value="${community._id}" ${community._id === preselectedCommunityId ? 'selected' : ''}>
-                      ${escapeHtml(community.communityName)}
-                    </option>
-                  `).join('')}
-                </select>
-              </label>
-
-              <label class="field">
-                <span>Tags</span>
-                <input type="text" name="tags" placeholder="e.g. recovery, hydration">
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div class="composer-actions">
-          <div class="toolbar">
-            <button class="sidebar-chip" type="button" data-action="toggle-composer-panel" data-panel="media">
-              <span class="material-symbols-outlined">image</span>
-              <span>Media</span>
-            </button>
-            <button class="sidebar-chip" type="button" data-action="toggle-composer-panel" data-panel="details">
-              <span class="material-symbols-outlined">sell</span>
-              <span>Tags</span>
-            </button>
-          </div>
-
-          <button class="button-primary" type="submit">Post</button>
-        </div>
-      </form>
-    </section>
-  `;
 }
 
 function renderCommunitySuggestions() {
@@ -552,8 +724,6 @@ function renderHomeView() {
       <h1>Soft, social, and centered on your wellness rhythm.</h1>
       <p>The feed stays true to the Stitch reference while pulling real posts from the communities you have joined.</p>
     </section>
-
-    ${renderCreatePostSection()}
 
     <div class="filter-row">
       <button class="filter-pill ${state.feedFilter === 'all' ? 'is-active' : ''}" type="button" data-filter-community="all">All Feed</button>
@@ -603,14 +773,9 @@ function renderProfileView() {
           </label>
         </div>
 
-        <label class="field">
-          <span>Profile image URL</span>
-          <input type="url" name="profilePicture" value="${escapeHtml(state.profile?.profilePicture || '')}" placeholder="Optional image URL">
-        </label>
-
         <div class="health-inline-actions">
           <button class="button-primary" type="submit">Save profile</button>
-          <span class="helper-text">Updates sync straight to MongoDB and refresh the shell instantly.</span>
+          <span class="helper-text">Your initials are now used automatically anywhere an avatar appears.</span>
         </div>
       </form>
     </section>
@@ -653,12 +818,12 @@ function renderCommunityView() {
         </button>
       </div>
 
-      ${community.isJoined ? renderCreatePostSection(community._id) : `
+      ${!community.isJoined ? `
         <div class="empty-state">
           <h3>Join before you post</h3>
           <p>This keeps the feed relevant and matches the community-first data relationships in the provided schemas.</p>
         </div>
-      `}
+      ` : ''}
     </section>
 
     ${renderPostFeed(posts, 'No posts in this circle yet', 'Be the first person to share an update in this community.')}
@@ -979,31 +1144,66 @@ async function handleLikePost(postId) {
 }
 
 async function handleCreatePost(form) {
-  const submitButton = form.querySelector('button[type="submit"]');
-  submitButton.disabled = true;
-  submitButton.textContent = 'Posting...';
+  if (state.postSubmitting) {
+    return;
+  }
+
+  setInlineMessage(elements.postModalMessage, '');
+  setPostImageError('');
+
+  const title = String(elements.postTitleInput.value || '').trim();
+  const body = String(elements.postBodyInput.value || '').trim();
+  const community = String(elements.postCommunityInput.value || '').trim();
+  const selectedFile = elements.postImageInput.files?.[0] || null;
+
+  if (!getJoinedCommunities().length) {
+    setInlineMessage(elements.postModalMessage, 'Join a community before creating a post.');
+    return;
+  }
+
+  if (!community) {
+    setInlineMessage(elements.postModalMessage, 'Choose a community for this post.');
+    elements.postCommunityInput.focus();
+    return;
+  }
+
+  if (!title || !body) {
+    setInlineMessage(elements.postModalMessage, 'Title and body are required.');
+    (!title ? elements.postTitleInput : elements.postBodyInput).focus();
+    return;
+  }
+
+  if (selectedFile && !handlePostImageSelection(selectedFile)) {
+    return;
+  }
+
+  const formData = new FormData(form);
+  formData.set('title', title);
+  formData.set('body', body);
+  formData.set('community', community);
+  formData.set('tags', String(formData.get('tags') || '').trim());
+
+  if (!selectedFile) {
+    formData.delete('image');
+  }
+
+  setPostSubmitState(true);
 
   try {
-    const formData = new FormData(form);
-
-    await apiFetch('/api/posts', {
+    const response = await apiFetch('/api/posts', {
       method: 'POST',
-      body: JSON.stringify({
-        description: formData.get('description'),
-        photo: formData.get('photo'),
-        tags: formData.get('tags'),
-        communityId: formData.get('communityId')
-      })
+      body: formData
     });
 
-    showToast('Post published.');
-    form.reset();
-    await refreshView({ skipLoading: true, refreshShell: true });
+    syncCreatedPost(response.post);
+    renderSidebar();
+    renderCurrentView();
+    closePostModal({ force: true });
+    showToast('Post shared successfully.');
   } catch (error) {
-    showToast(error.message, 'error');
+    setInlineMessage(elements.postModalMessage, error.message);
   } finally {
-    submitButton.disabled = false;
-    submitButton.textContent = 'Post';
+    setPostSubmitState(false);
   }
 }
 
@@ -1019,8 +1219,7 @@ async function handleProfileUpdate(form) {
       method: 'PUT',
       body: JSON.stringify({
         name: formData.get('name'),
-        username: formData.get('username'),
-        profilePicture: formData.get('profilePicture')
+        username: formData.get('username')
       })
     });
 
@@ -1098,24 +1297,6 @@ async function handleSignOut() {
   }
 }
 
-function toggleComposerPanel(panelName) {
-  const panel = document.querySelector(`.composer-panel[data-panel="${panelName}"]`);
-  if (panel) {
-    panel.classList.toggle('is-open');
-  }
-}
-
-function focusComposer() {
-  if (window.location.pathname !== '/') {
-    navigateTo('/').then(() => {
-      document.getElementById('composer-textarea')?.focus();
-    });
-    return;
-  }
-
-  document.getElementById('composer-textarea')?.focus();
-}
-
 function openFirstCommunity() {
   const joinedCommunities = getJoinedCommunities();
   const targetCommunity = joinedCommunities[0] || state.communities[0];
@@ -1176,13 +1357,18 @@ document.addEventListener('click', async (event) => {
     return;
   }
 
-  if (action === 'toggle-composer-panel') {
-    toggleComposerPanel(actionButton.dataset.panel);
+  if (action === 'open-post-modal') {
+    openPostModal(actionButton.dataset.communityId || '');
     return;
   }
 
-  if (action === 'focus-composer') {
-    focusComposer();
+  if (action === 'dismiss-post-modal') {
+    closePostModal();
+    return;
+  }
+
+  if (action === 'remove-post-image') {
+    clearPostImageSelection();
     return;
   }
 
@@ -1234,6 +1420,16 @@ elements.signOutButton.addEventListener('click', handleSignOut);
 elements.searchInput.addEventListener('input', (event) => {
   state.search = event.target.value;
   renderCurrentView();
+});
+
+elements.postImageInput.addEventListener('change', (event) => {
+  handlePostImageSelection(event.target.files?.[0] || null);
+});
+
+window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && state.postModalOpen) {
+    closePostModal();
+  }
 });
 
 window.addEventListener('popstate', () => {

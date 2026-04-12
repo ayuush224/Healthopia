@@ -26,7 +26,7 @@ async function loadUserFromToken(token) {
     throw new AppError('Authentication required.', 401);
   }
 
-  let user = await User.findById(payload.userId).select('_id name username profilePicture email');
+  let user = await User.findById(payload.userId).select('_id name username email');
 
   if (!user) {
     throw new AppError('Authentication required.', 401);

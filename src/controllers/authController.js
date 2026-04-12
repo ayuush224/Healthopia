@@ -3,13 +3,12 @@ const HealthTracker = require('../models/HealthTracker');
 const asyncHandler = require('../utils/asyncHandler');
 const { AppError } = require('../utils/errors');
 const { attachAuthCookie, clearAuthCookie } = require('../utils/authTokens');
-const { ensureOptionalString, ensureString, normalizeUsername } = require('../utils/validation');
+const { ensureString, normalizeUsername } = require('../utils/validation');
 
 function serializeAuthUser(user) {
   return {
     _id: user._id,
     name: user.name,
-    profilePicture: user.profilePicture,
     username: user.username,
     email: user.email,
     likedPosts: user.likedPosts || []
@@ -21,7 +20,6 @@ const register = asyncHandler(async (req, res) => {
   const username = normalizeUsername(req.body.username);
   const email = ensureString(req.body.email, 'Email', { min: 5, max: 254 });
   const password = ensureString(req.body.password, 'Password', { min: 8, max: 128 });
-  const profilePicture = ensureOptionalString(req.body.profilePicture, { max: 1500 });
 
   const existingUser = await User.findOne({email, username});
   if (existingUser) {
@@ -30,7 +28,6 @@ const register = asyncHandler(async (req, res) => {
 
   const user = await User.create({
     name,
-    profilePicture,
     username,
     email,
     password,

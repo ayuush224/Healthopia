@@ -32,7 +32,12 @@ const getCommunityById = asyncHandler(async (req, res) => {
   const [community, currentUser, rawPosts] = await Promise.all([
     Community.findById(communityId),
     User.findById(req.user._id).select('communitiesJoined'),
-    buildPostQuery(Post.find({ communityId }).sort({ createdAt: -1 }))
+    buildPostQuery(Post.find({
+      $or: [
+        { community: communityId },
+        { communityId }
+      ]
+    }).sort({ createdAt: -1 }))
   ]);
 
   if (!community) {

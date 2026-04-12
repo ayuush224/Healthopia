@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 const Community = require('../models/Community');
 const Post = require('../models/Post');
 const User = require('../models/User');
@@ -13,6 +15,36 @@ const {
   parseTags
 } = require('../utils/validation');
 
+function buildCommunityFilter(communityValue) {
+  return {
+    $or: [
+      { community: communityValue },
+      { communityId: communityValue }
+    ]
+  };
+}
+
+function buildAuthorFilter(authorValue) {
+  return {
+    $or: [
+      { user: authorValue },
+      { createdBy: authorValue }
+    ]
+  };
+}
+
+async function removeUploadedFile(filePath) {
+  if (!filePath) {
+    return;
+  }
+
+  try {
+    await fs.promises.unlink(filePath);
+  } catch (_error) {
+    // Ignore cleanup failures for already-removed temp files.
+  }
+}
+
 const getPosts = asyncHandler(async (req, res) => {
   const currentUser = await User.findById(req.user._id).select('communitiesJoined');
 
@@ -22,12 +54,12 @@ const getPosts = asyncHandler(async (req, res) => {
   const filter = {};
 
   if (communityId) {
-    filter.communityId = communityId;
+    Object.assign(filter, buildCommunityFilter(communityId));
   } else if (authorId) {
-    filter.createdBy = authorId;
+    Object.assign(filter, buildAuthorFilter(authorId));
   } else {
     const joinedCommunityIds = currentUser?.communitiesJoined || [];
-    filter.communityId = { $in: joinedCommunityIds };
+    Object.assign(filter, buildCommunityFilter({ $in: joinedCommunityIds }));
   }
 
   const posts = await decoratePostsForUser(
@@ -41,57 +73,81 @@ const getPosts = asyncHandler(async (req, res) => {
 });
 
 const createPost = asyncHandler(async (req, res) => {
-  const description = ensureString(req.body.description, 'Post description', { min: 3, max: 1200 });
-  const photo = ensureOptionalString(req.body.photo, { max: 1000 });
-  const communityId = ensureObjectId(req.body.communityId, 'Community');
-  const tags = parseTags(req.body.tags);
+  let postCreated = false;
 
-  const [community, user] = await Promise.all([
-    Community.findById(communityId),
-    User.findById(req.user._id)
-  ]);
+  try {
+    const title = ensureOptionalString(req.body.title, { max: 120 });
+    const body = ensureOptionalString(req.body.body, { max: 5000 });
+    const communityId = ensureObjectId(req.body.community, 'Community');
+    const tags = parseTags(req.body.tags);
+    const image = req.file ? `/uploads/${req.file.filename}` : '';
 
-  if (!community) {
-    throw new AppError('Community not found.', 404);
+    if (!title && !body) {
+      throw new AppError('Add a title or body before posting.', 400);
+    }
+
+    const [community, user] = await Promise.all([
+      Community.findById(communityId).select('_id posts'),
+      User.findById(req.user._id).select('_id communitiesJoined posts')
+    ]);
+
+    if (!community) {
+      throw new AppError('Community not found.', 404);
+    }
+
+    if (!user) {
+      throw new AppError('User not found.', 404);
+    }
+
+    const hasJoinedCommunity = (user.communitiesJoined || [])
+      .some((joinedCommunityId) => joinedCommunityId.toString() === communityId);
+
+    if (!hasJoinedCommunity) {
+      throw new AppError('Join this community before posting.', 403);
+    }
+
+    const post = await Post.create({
+      user: req.user._id,
+      createdBy: req.user._id,
+      title,
+      body,
+      description: body,
+      tags,
+      community: communityId,
+      communityId,
+      image,
+      photo: image
+    });
+
+    postCreated = true;
+
+    await Promise.all([
+      User.updateOne(
+        { _id: req.user._id },
+        { $addToSet: { posts: post._id } }
+      ),
+      Community.updateOne(
+        { _id: communityId },
+        { $addToSet: { posts: post._id } }
+      )
+    ]);
+
+    const populatedPost = await decoratePostsForUser(
+      await buildPostQuery(Post.findById(post._id)),
+      req.user._id
+    );
+
+    res.status(201).json({
+      message: 'Post created successfully.',
+      post: populatedPost
+    });
+  } catch (error) {
+    if (!postCreated) {
+      await removeUploadedFile(req.file?.path);
+    }
+
+    throw error;
   }
-
-  if (!user) {
-    throw new AppError('User not found.', 404);
-  }
-
-  const hasJoinedCommunity = user.communitiesJoined.some(
-    (joinedId) => joinedId.toString() === communityId.toString()
-  );
-
-  if (!hasJoinedCommunity) {
-    throw new AppError('Join the community before creating a post in it.', 403);
-  }
-
-  const post = await Post.create({
-    createdBy: user._id,
-    photo,
-    description,
-    likes: 0,
-    likedBy: [],
-    comments: [],
-    tags,
-    communityId
-  });
-
-  user.posts.push(post._id);
-  community.posts.push(post._id);
-
-  await Promise.all([user.save(), community.save()]);
-
-  const populatedPost = await decoratePostsForUser(
-    await buildPostQuery(Post.findById(post._id)),
-    req.user._id
-  );
-
-  res.status(201).json({
-    message: 'Post created successfully.',
-    post: populatedPost
-  });
 });
 
 const getPostById = asyncHandler(async (req, res) => {

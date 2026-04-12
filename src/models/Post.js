@@ -2,19 +2,37 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const postSchema = new Schema({
-  createdBy: {
+  user: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  photo: {
+  createdBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  title: {
     type: String,
-    default: '',
-    required: true
+    trim: true,
+    default: ''
+  },
+  body: {
+    type: String,
+    trim: true,
+    default: ''
   },
   description: {
     type: String,
-    required: [true, 'Description is required']
+    trim: true,
+    default: ''
+  },
+  image: {
+    type: String,
+    default: ''
+  },
+  photo: {
+    type: String,
+    default: ''
   },
   likes: {
     type: Number,
@@ -37,6 +55,11 @@ const postSchema = new Schema({
   tags: [{
     type: String
   }],
+  community: {
+    type: Schema.Types.ObjectId,
+    ref: 'Community',
+    required: true
+  },
   communityId: {
     type: Schema.Types.ObjectId,
     ref: 'Community'
@@ -46,5 +69,45 @@ const postSchema = new Schema({
     default: Date.now
   }
 }, { timestamps: true });
+
+postSchema.pre('validate', function syncLegacyFields(next) {
+  if (!this.user && this.createdBy) {
+    this.user = this.createdBy;
+  }
+
+  if (!this.createdBy && this.user) {
+    this.createdBy = this.user;
+  }
+
+  if (!this.community && this.communityId) {
+    this.community = this.communityId;
+  }
+
+  if (!this.communityId && this.community) {
+    this.communityId = this.community;
+  }
+
+  if (!this.body && this.description) {
+    this.body = this.description;
+  }
+
+  if (!this.description && this.body) {
+    this.description = this.body;
+  }
+
+  if (!this.title) {
+    this.title = String(this.body || this.description || '').trim().slice(0, 80);
+  }
+
+  if (!this.image && this.photo) {
+    this.image = this.photo;
+  }
+
+  if (!this.photo && this.image) {
+    this.photo = this.image;
+  }
+
+  next();
+});
 
 module.exports = mongoose.model('Post', postSchema);

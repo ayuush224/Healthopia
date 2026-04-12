@@ -36,7 +36,7 @@
     <section class="auth-card">
       <div class="auth-card__header">
         <h2>Create account</h2>
-        <p>Keep it simple and schema-aligned: name, username, and an optional profile image URL.</p>
+        <p>Keep it simple and schema-aligned: name, username, email, and the initials-based avatar comes built in.</p>
       </div>
 
       <form id="register-form" class="stack-form">
@@ -58,11 +58,6 @@
         <label class="field">
           <span>Password</span>
           <input type="password" name="password" placeholder="Create a strong password" autocomplete="new-password" required>
-        </label>
-
-        <label class="field">
-          <span>Profile image URL</span>
-          <input type="url" name="profilePicture" placeholder="Optional image URL">
         </label>
 
         <div id="auth-message" class="inline-message is-hidden" role="alert"></div>
