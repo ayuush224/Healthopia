@@ -1,18 +1,12 @@
-const ACCENTS = [
-  { bg: '#dff7ed', text: '#0f5238', dot: '#19b87d' },
-  { bg: '#e4efff', text: '#2b5eb0', dot: '#70a6ff' },
-  { bg: '#fff0dd', text: '#b56b17', dot: '#f39b3d' },
-  { bg: '#f1e8ff', text: '#7b3de2', dot: '#b081ff' },
-  { bg: '#dff4f5', text: '#1c4f51', dot: '#48c2c8' }
-];
+const ACCENT_COUNT = 5;
 
 function hashString(value) {
   return Array.from(String(value || '')).reduce((total, character) => total + character.charCodeAt(0), 0);
 }
 
 export function getAccentVars(value) {
-  const accent = ACCENTS[hashString(value) % ACCENTS.length];
-  return `--accent-bg:${accent.bg};--accent-text:${accent.text};--accent-dot:${accent.dot};`;
+  const accentIndex = (hashString(value) % ACCENT_COUNT) + 1;
+  return `--accent-bg:var(--accent-${accentIndex}-bg);--accent-text:var(--accent-${accentIndex}-text);--accent-dot:var(--accent-${accentIndex}-dot);`;
 }
 
 export function escapeHtml(value = '') {

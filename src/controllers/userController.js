@@ -2,20 +2,7 @@ const User = require('../models/User');
 const Post = require('../models/Post');
 const asyncHandler = require('../utils/asyncHandler');
 const { AppError } = require('../utils/errors');
-const { ensureOptionalString, normalizeUsername } = require('../utils/validation');
 const { buildPostQuery, decoratePostsForUser } = require('../utils/postQuery');
-
-function buildUserResponse(user) {
-  return {
-    _id: user._id,
-    name: user.name,
-    email: user.email,
-    username: user.username,
-    posts: user.posts,
-    likedPosts: user.likedPosts || [],
-    communitiesJoined: user.communitiesJoined
-  };
-}
 
 const getProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id)
@@ -55,43 +42,6 @@ const getProfile = asyncHandler(async (req, res) => {
   });
 });
 
-const updateProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
-
-  if (!user) {
-    throw new AppError('User not found.', 404);
-  }
-
-  const updates = {};
-
-  if (req.body.name !== undefined) {
-    updates.name = ensureOptionalString(req.body.name, { min: 2, max: 60 });
-  }
-
-  if (req.body.username !== undefined) {
-    const username = normalizeUsername(req.body.username);
-    const existingUser = await User.findOne({
-      username,
-      _id: { $ne: user._id }
-    });
-
-    if (existingUser) {
-      throw new AppError('That username is already taken.', 409);
-    }
-
-    updates.username = username;
-  }
-
-  Object.assign(user, updates);
-  await user.save();
-
-  res.json({
-    message: 'Profile updated successfully.',
-    user: buildUserResponse(user)
-  });
-});
-
 module.exports = {
-  getProfile,
-  updateProfile
+  getProfile
 };

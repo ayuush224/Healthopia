@@ -33,20 +33,16 @@
         data-action="open-post-modal">
         <span class="material-symbols-outlined">add</span>
       </button>
-      <button class="icon-button topbar__theme-button" type="button" aria-label="Theme">
-        <span class="material-symbols-outlined">dark_mode</span>
+      <button id="theme-toggle-button" class="icon-button topbar__theme-button" type="button" aria-label="Switch to dark mode">
+        <span id="theme-toggle-icon" class="material-symbols-outlined">dark_mode</span>
       </button>
 
       <div class="menu-shell">
-        <button id="profile-menu-button" class="avatar-button" type="button" aria-expanded="false" aria-controls="profile-menu">
+        <button id="profile-menu-button" class="avatar-button" type="button" aria-label="Open profile menu" aria-expanded="false" aria-controls="profile-menu">
           <span id="header-avatar"></span>
         </button>
 
-        <div id="profile-menu" class="dropdown-menu is-hidden">
-          <button type="button" data-route="/profile">Profile</button>
-          <button type="button" data-route="/health">Health Tracker</button>
-          <button id="sign-out-button" type="button">Sign out</button>
-        </div>
+        <div id="profile-menu" class="dropdown-menu profile-menu" aria-hidden="true"></div>
       </div>
     </div>
   </header>
@@ -64,8 +60,8 @@
           <span>Discover</span>
         </button>
         <button class="sidebar-nav__item" data-route="/profile">
-          <span class="material-symbols-outlined">group</span>
-          <span>My Communities</span>
+          <span class="material-symbols-outlined">person</span>
+          <span>Your Profile</span>
         </button>
         <button class="sidebar-nav__item" data-route="/health">
           <span class="material-symbols-outlined">menu_book</span>
@@ -74,10 +70,6 @@
         <button class="sidebar-nav__item" data-action="open-first-community">
           <span class="material-symbols-outlined">verified</span>
           <span>Community Spotlight</span>
-        </button>
-        <button class="sidebar-nav__item" data-route="/profile">
-          <span class="material-symbols-outlined">settings</span>
-          <span>Profile Settings</span>
         </button>
       </nav>
 
@@ -114,8 +106,8 @@
       <span class="material-symbols-outlined">home</span>
       <span>Home</span>
     </button>
-    <button type="button" class="mobile-nav__item" data-route="/profile">
-      <span class="material-symbols-outlined">explore</span>
+    <button type="button" class="mobile-nav__item" data-action="open-first-community">
+      <span class="material-symbols-outlined">groups</span>
       <span>Circles</span>
     </button>
     <button

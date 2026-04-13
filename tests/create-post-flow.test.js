@@ -21,7 +21,7 @@ test('home view no longer includes the inline create composer', () => {
 test('create post flow uses modal actions and multipart submission without refreshing the view', () => {
   const createHandlerSource = appSource
     .split('async function handleCreatePost')[1]
-    .split('async function handleProfileUpdate')[0];
+    .split('async function handleComment')[0];
 
   assert.ok(createHandlerSource.includes('new FormData(form)'));
   assert.ok(createHandlerSource.includes("apiFetch('/api/posts'"));

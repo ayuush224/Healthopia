@@ -11,6 +11,12 @@ import {
 import { createPostLikeManager } from './postLikeManager.js';
 
 const MAX_POST_IMAGE_BYTES = 512 * 1024;
+const THEME_STORAGE_KEY = 'soft-health-theme';
+const PROFILE_TABS = [
+  { id: 'all', label: 'All Posts' },
+  { id: 'top', label: 'Top Posts' },
+  { id: 'new', label: 'New Posts' }
+];
 
 const state = {
   profile: null,
@@ -28,11 +34,14 @@ const state = {
   communityPosts: [],
   currentPost: null,
   postModalOpen: false,
+  profileMenuOpen: false,
   postSubmitting: false,
   postImagePreviewUrl: '',
   shellHydrated: false,
   search: '',
-  feedFilter: 'all'
+  feedFilter: 'all',
+  profileTab: 'all',
+  theme: 'light'
 };
 
 const likeManager = createPostLikeManager();
@@ -45,9 +54,10 @@ const elements = {
   profileStatsSidebar: document.getElementById('profile-stats-sidebar'),
   trendingCommunitiesList: document.getElementById('trending-communities-list'),
   headerAvatar: document.getElementById('header-avatar'),
+  themeToggleButton: document.getElementById('theme-toggle-button'),
+  themeToggleIcon: document.getElementById('theme-toggle-icon'),
   profileMenuButton: document.getElementById('profile-menu-button'),
   profileMenu: document.getElementById('profile-menu'),
-  signOutButton: document.getElementById('sign-out-button'),
   toastStack: document.getElementById('toast-stack'),
   postModal: document.getElementById('post-modal'),
   postModalDialog: document.getElementById('post-modal-dialog'),
@@ -93,6 +103,83 @@ function getRoute() {
   }
 
   return { name: 'home' };
+}
+
+function getStoredTheme() {
+  try {
+    return localStorage.getItem(THEME_STORAGE_KEY);
+  } catch (_error) {
+    return null;
+  }
+}
+
+function persistTheme(theme) {
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch (_error) {
+    // Ignore storage failures and keep the active in-memory theme.
+  }
+}
+
+function applyTheme(theme) {
+  state.theme = theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = state.theme;
+
+  const nextTheme = state.theme === 'dark' ? 'light' : 'dark';
+  elements.themeToggleButton?.setAttribute('aria-label', `Switch to ${nextTheme} mode`);
+
+  if (elements.themeToggleIcon) {
+    elements.themeToggleIcon.textContent = state.theme === 'dark' ? 'light_mode' : 'dark_mode';
+  }
+}
+
+function initializeTheme() {
+  const storedTheme = getStoredTheme();
+
+  if (storedTheme === 'light' || storedTheme === 'dark') {
+    applyTheme(storedTheme);
+    return;
+  }
+
+  const systemTheme = window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  applyTheme(systemTheme);
+}
+
+function toggleTheme() {
+  const nextTheme = state.theme === 'dark' ? 'light' : 'dark';
+  applyTheme(nextTheme);
+  persistTheme(nextTheme);
+}
+
+function openProfileMenu() {
+  if (state.profileMenuOpen) {
+    return;
+  }
+
+  state.profileMenuOpen = true;
+  elements.profileMenu.classList.add('is-open');
+  elements.profileMenu.setAttribute('aria-hidden', 'false');
+  elements.profileMenuButton.setAttribute('aria-expanded', 'true');
+}
+
+function closeProfileMenu() {
+  if (!state.profileMenuOpen) {
+    return;
+  }
+
+  state.profileMenuOpen = false;
+  elements.profileMenu.classList.remove('is-open');
+  elements.profileMenu.setAttribute('aria-hidden', 'true');
+  elements.profileMenuButton.setAttribute('aria-expanded', 'false');
+}
+
+function toggleProfileMenu() {
+  if (state.profileMenuOpen) {
+    closeProfileMenu();
+    return;
+  }
+
+  openProfileMenu();
 }
 
 function showToast(message, type = 'success') {
@@ -256,6 +343,7 @@ function openPostModal(preselectedCommunityId = '') {
     return;
   }
 
+  closeProfileMenu();
   populatePostCommunityOptions(getDefaultPostCommunityId(preselectedCommunityId));
   elements.postModal.classList.remove('is-hidden');
   requestAnimationFrame(() => {
@@ -437,9 +525,92 @@ function applyLikeStateToLocalPosts(postId, liked, likesCount) {
   syncLikeButtons(postId);
 }
 
+function renderEmptyState(title, copy = '', options = {}) {
+  const toneClass = options.tone ? ` empty-state--${options.tone}` : '';
+  const copyMarkup = copy ? `<p>${escapeHtml(copy)}</p>` : '';
+
+  return `
+    <section class="empty-state${toneClass}">
+      <h3>${escapeHtml(title)}</h3>
+      ${copyMarkup}
+    </section>
+  `;
+}
+
+function getProfilePostsByTab() {
+  const searchedPosts = state.search
+    ? state.profilePosts.filter((post) => matchesSearch(post, state.search))
+    : [...state.profilePosts];
+
+  if (state.profileTab === 'top') {
+    return searchedPosts.sort((leftPost, rightPost) => {
+      const likesDelta = (rightPost.likes || 0) - (leftPost.likes || 0);
+      if (likesDelta) {
+        return likesDelta;
+      }
+
+      return (rightPost.comments?.length || 0) - (leftPost.comments?.length || 0);
+    });
+  }
+
+  if (state.profileTab === 'new') {
+    return searchedPosts.sort((leftPost, rightPost) => {
+      return new Date(rightPost.createdAt || rightPost.updatedAt || 0).getTime()
+        - new Date(leftPost.createdAt || leftPost.updatedAt || 0).getTime();
+    });
+  }
+
+  return searchedPosts;
+}
+
+function renderProfileTabs() {
+  return `
+    <div class="profile-tabs" role="tablist" aria-label="Profile post filters">
+      ${PROFILE_TABS.map((tab) => `
+        <button
+          class="profile-tab ${state.profileTab === tab.id ? 'is-active' : ''}"
+          type="button"
+          role="tab"
+          aria-selected="${String(state.profileTab === tab.id)}"
+          data-action="set-profile-tab"
+          data-profile-tab="${tab.id}">
+          ${escapeHtml(tab.label)}
+        </button>
+      `).join('')}
+    </div>
+  `;
+}
+
 function renderSidebar() {
   const profileName = state.profile?.name || 'Soft Health';
   elements.headerAvatar.innerHTML = renderAvatar(state.profile || { name: profileName }, 'small');
+  elements.profileMenu.innerHTML = `
+    <div class="profile-menu__card">
+      <div class="profile-menu__header">
+        ${renderAvatar(state.profile || { name: profileName }, 'large')}
+        <div class="profile-menu__copy">
+          <strong>${escapeHtml(state.profile?.name || 'Soft Health Member')}</strong>
+          <span>@${escapeHtml(state.profile?.username || 'member')}</span>
+        </div>
+      </div>
+
+      <div class="profile-menu__stats">
+        <div class="profile-menu__stat">
+          <strong>${formatCompactNumber(state.profileStats.postsCount)}</strong>
+          <span>Total Posts</span>
+        </div>
+        <div class="profile-menu__stat">
+          <strong>${formatCompactNumber(state.profileStats.likesCount)}</strong>
+          <span>Total Likes</span>
+        </div>
+      </div>
+
+      <div class="profile-menu__actions">
+        <button type="button" data-route="/profile">Your Profile</button>
+        <button type="button" data-action="logout">Logout</button>
+      </div>
+    </div>
+  `;
 
   const joinedCommunities = getJoinedCommunities();
   elements.joinedCommunitiesList.innerHTML = joinedCommunities.length
@@ -472,13 +643,13 @@ function renderSidebar() {
         </div>
         <div class="ring">
           <svg viewBox="0 0 120 120" aria-hidden="true">
-            <circle cx="60" cy="60" r="48" fill="none" stroke="#e6eaec" stroke-width="10"></circle>
+            <circle cx="60" cy="60" r="48" fill="none" style="stroke:var(--ring-track);" stroke-width="10"></circle>
             <circle
               cx="60"
               cy="60"
               r="48"
               fill="none"
-              stroke="#0f5238"
+              style="stroke:var(--ring-progress);"
               stroke-width="10"
               stroke-linecap="round"
               stroke-dasharray="301.59"
@@ -542,6 +713,9 @@ function renderSidebar() {
   document.querySelectorAll('.mobile-nav__item').forEach((item) => {
     item.classList.remove('is-active');
     if (item.dataset.route === window.location.pathname) {
+      item.classList.add('is-active');
+    }
+    if (window.location.pathname.startsWith('/community/') && item.dataset.action === 'open-first-community') {
       item.classList.add('is-active');
     }
   });
@@ -667,14 +841,9 @@ function renderPostCard(post, options = {}) {
   `;
 }
 
-function renderPostFeed(posts, emptyTitle, emptyCopy) {
+function renderPostFeed(posts, emptyTitle, emptyCopy, options = {}) {
   if (!posts.length) {
-    return `
-      <section class="empty-state">
-        <h3>${escapeHtml(emptyTitle)}</h3>
-        <p>${escapeHtml(emptyCopy)}</p>
-      </section>
-    `;
+    return renderEmptyState(emptyTitle, emptyCopy, options);
   }
 
   return `<div class="feed-stack">${posts.map((post) => renderPostCard(post)).join('')}</div>`;
@@ -734,14 +903,22 @@ function renderHomeView() {
       `).join('')}
     </div>
 
-    ${joinedCommunities.length ? renderPostFeed(homePosts, 'Nothing here yet', 'Posts from your joined communities will appear here once people start sharing.') : renderCommunitySuggestions()}
+    ${joinedCommunities.length
+      ? renderPostFeed(
+          homePosts,
+          'No posts yet. Be the first to share your journey \u2728',
+          'Fresh updates from your joined communities will appear here as soon as someone shares.',
+          { tone: 'feed' }
+        )
+      : renderCommunitySuggestions()}
   `;
 }
 
 function renderProfileView() {
-  const profilePosts = state.search
-    ? state.profilePosts.filter((post) => matchesSearch(post, state.search))
-    : state.profilePosts;
+  const profilePosts = getProfilePostsByTab();
+  const activeTab = PROFILE_TABS.find((tab) => tab.id === state.profileTab);
+  const profileName = state.profile?.name || 'Soft Health Member';
+  const profileUsername = state.profile?.username || 'member';
 
   elements.viewRoot.innerHTML = `
     <section class="profile-hero">
@@ -749,9 +926,9 @@ function renderProfileView() {
         <div class="post-card__meta">
           ${renderAvatar(state.profile || { name: 'Profile' }, 'large')}
           <div class="profile-hero__copy">
-            <h1>${escapeHtml(state.profile?.name || 'Soft Health Member')}</h1>
-            <p>@${escapeHtml(state.profile?.username || 'member')}</p>
-            <p>${state.profileStats.communitiesCount} communities joined • ${state.profileStats.postsCount} posts created</p>
+            <h1>@${escapeHtml(profileUsername)}</h1>
+            <p>${escapeHtml(profileName)}</p>
+            <p>${formatCompactNumber(state.profileStats.communitiesCount)} communities joined &bull; ${formatCompactNumber(state.profileStats.postsCount)} posts created</p>
           </div>
         </div>
         <div class="profile-hero__stats">
@@ -759,32 +936,25 @@ function renderProfileView() {
           <span class="community-badge">${formatCompactNumber(state.profileStats.commentsCount)} comments</span>
         </div>
       </div>
+    </section>
 
-      <form id="profile-form" class="stack-form">
-        <div class="field-grid">
-          <label class="field">
-            <span>Name</span>
-            <input type="text" name="name" value="${escapeHtml(state.profile?.name || '')}" required>
-          </label>
-
-          <label class="field">
-            <span>Username</span>
-            <input type="text" name="username" value="${escapeHtml(state.profile?.username || '')}" required>
-          </label>
+    <section class="detail-card">
+      <div class="detail-card__header detail-card__header--stacked">
+        <div>
+          <h2>Your posts</h2>
+          <p class="muted-copy">Browse everything you have shared in the community, sorted the way you prefer.</p>
         </div>
-
-        <div class="health-inline-actions">
-          <button class="button-primary" type="submit">Save profile</button>
-          <span class="helper-text">Your initials are now used automatically anywhere an avatar appears.</span>
-        </div>
-      </form>
+        ${renderProfileTabs()}
+      </div>
+      <p class="micro-copy">Showing ${escapeHtml(activeTab?.label || 'All Posts')}</p>
     </section>
 
     <section class="profile-grid">
       ${renderPostFeed(
         profilePosts,
-        'No posts yet',
-        'Your profile will show every post you create across joined communities.'
+        "You haven't posted anything yet",
+        '',
+        { tone: 'profile' }
       )}
     </section>
   `;
@@ -921,13 +1091,13 @@ function renderHealthView() {
             </div>
             <div class="ring">
               <svg viewBox="0 0 120 120" aria-hidden="true">
-                <circle cx="60" cy="60" r="48" fill="none" stroke="#e6eaec" stroke-width="10"></circle>
+                <circle cx="60" cy="60" r="48" fill="none" style="stroke:var(--ring-track);" stroke-width="10"></circle>
                 <circle
                   cx="60"
                   cy="60"
                   r="48"
                   fill="none"
-                  stroke="#0f5238"
+                  style="stroke:var(--ring-progress);"
                   stroke-width="10"
                   stroke-linecap="round"
                   stroke-dasharray="301.59"
@@ -1207,32 +1377,6 @@ async function handleCreatePost(form) {
   }
 }
 
-async function handleProfileUpdate(form) {
-  const submitButton = form.querySelector('button[type="submit"]');
-  submitButton.disabled = true;
-  submitButton.textContent = 'Saving...';
-
-  try {
-    const formData = new FormData(form);
-
-    await apiFetch('/api/users/profile', {
-      method: 'PUT',
-      body: JSON.stringify({
-        name: formData.get('name'),
-        username: formData.get('username')
-      })
-    });
-
-    showToast('Profile updated.');
-    await refreshView({ skipLoading: true, refreshShell: true });
-  } catch (error) {
-    showToast(error.message, 'error');
-  } finally {
-    submitButton.disabled = false;
-    submitButton.textContent = 'Save profile';
-  }
-}
-
 async function handleComment(form) {
   const postId = form.dataset.postId;
   const submitButton = form.querySelector('button[type="submit"]');
@@ -1314,7 +1458,7 @@ document.addEventListener('click', async (event) => {
   if (routeButton) {
     event.preventDefault();
     const targetPath = routeButton.dataset.route;
-    elements.profileMenu.classList.add('is-hidden');
+    closeProfileMenu();
     await navigateTo(targetPath);
     return;
   }
@@ -1329,8 +1473,7 @@ document.addEventListener('click', async (event) => {
   const actionButton = event.target.closest('[data-action]');
   if (!actionButton) {
     if (!event.target.closest('.menu-shell')) {
-      elements.profileMenu.classList.add('is-hidden');
-      elements.profileMenuButton.setAttribute('aria-expanded', 'false');
+      closeProfileMenu();
     }
     return;
   }
@@ -1357,6 +1500,12 @@ document.addEventListener('click', async (event) => {
     return;
   }
 
+  if (action === 'set-profile-tab') {
+    state.profileTab = actionButton.dataset.profileTab || 'all';
+    renderCurrentView();
+    return;
+  }
+
   if (action === 'open-post-modal') {
     openPostModal(actionButton.dataset.communityId || '');
     return;
@@ -1377,6 +1526,12 @@ document.addEventListener('click', async (event) => {
     return;
   }
 
+  if (action === 'logout') {
+    closeProfileMenu();
+    await handleSignOut();
+    return;
+  }
+
   if (action === 'health-quick-add') {
     const form = document.getElementById('health-form');
     if (!form) {
@@ -1393,11 +1548,6 @@ document.addEventListener('submit', async (event) => {
     await handleCreatePost(event.target);
   }
 
-  if (event.target.id === 'profile-form') {
-    event.preventDefault();
-    await handleProfileUpdate(event.target);
-  }
-
   if (event.target.id === 'comment-form') {
     event.preventDefault();
     await handleComment(event.target);
@@ -1409,13 +1559,14 @@ document.addEventListener('submit', async (event) => {
   }
 });
 
-elements.profileMenuButton.addEventListener('click', () => {
-  elements.profileMenu.classList.toggle('is-hidden');
-  const expanded = !elements.profileMenu.classList.contains('is-hidden');
-  elements.profileMenuButton.setAttribute('aria-expanded', String(expanded));
+elements.profileMenuButton.addEventListener('click', (event) => {
+  event.stopPropagation();
+  toggleProfileMenu();
 });
 
-elements.signOutButton.addEventListener('click', handleSignOut);
+elements.themeToggleButton?.addEventListener('click', () => {
+  toggleTheme();
+});
 
 elements.searchInput.addEventListener('input', (event) => {
   state.search = event.target.value;
@@ -1429,6 +1580,11 @@ elements.postImageInput.addEventListener('change', (event) => {
 window.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && state.postModalOpen) {
     closePostModal();
+    return;
+  }
+
+  if (event.key === 'Escape' && state.profileMenuOpen) {
+    closeProfileMenu();
   }
 });
 
@@ -1436,5 +1592,6 @@ window.addEventListener('popstate', () => {
   refreshView();
 });
 
+initializeTheme();
 renderLoadingState();
 refreshView({ skipLoading: true });
