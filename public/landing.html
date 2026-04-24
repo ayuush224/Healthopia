@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Healthopia | Gentle Precision In Wellness</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body class="landing-page">
+  <div class="landing-backdrop" aria-hidden="true">
+    <div class="landing-backdrop__marquee">
+      <span>HEALTHOPIA</span>
+      <span>HEALTHOPIA</span>
+      <span>HEALTHOPIA</span>
+      <span>HEALTHOPIA</span>
+      <span>HEALTHOPIA</span>
+      <span>HEALTHOPIA</span>
+    </div>
+  </div>
+
+  <div class="landing-shell">
+    <header class="landing-header">
+      <div class="landing-header__spacer" aria-hidden="true"></div>
+      <a href="/" class="landing-header__brand">Healthopia</a>
+      <div class="landing-header__actions">
+        <button id="landing-theme-toggle" class="icon-button landing-theme-toggle" type="button" aria-label="Switch to dark mode">
+          <span id="landing-theme-icon" class="material-symbols-outlined">dark_mode</span>
+        </button>
+        <a class="soft-button landing-header__login" href="/sign-in">Login</a>
+      </div>
+    </header>
+
+    <main class="landing-main">
+      <section class="landing-hero">
+        <div class="landing-hero__copy">
+          <h1>Your health, your community, your rhythm.</h1>
+          <p>
+            Gentle precision in wellness. Track what matters, connect with others, and find
+            a pace that brings peace to your daily routine without the clinical pressure.
+          </p>
+          <div class="landing-hero__actions">
+            <a class="button-primary landing-button-primary" href="/sign-in">Start your journey</a>
+            <button class="soft-button landing-button-secondary" type="button" data-scroll-target="#landing-explore">
+              Explore Features
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section id="landing-explore" class="landing-explore">
+        <div class="landing-showcase">
+          <div class="landing-showcase__frame">
+            <div class="landing-showcase__slides" aria-live="polite">
+              <figure class="landing-slide is-active">
+                <img src="/images/landing-slide-health.png" alt="Healthopia health dashboard preview">
+              </figure>
+              <figure class="landing-slide">
+                <img src="/images/landing-slide-posts.png" alt="Healthopia community post preview">
+              </figure>
+              <figure class="landing-slide">
+                <img src="/images/landing-slide-resources.png" alt="Healthopia wellness picks preview">
+              </figure>
+            </div>
+            <div class="landing-showcase__dots" aria-hidden="true">
+              <span class="is-active"></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+
+        <section class="landing-feature-grid" aria-label="Healthopia feature overview">
+          <article class="landing-feature-card landing-feature-card--copy landing-feature-card--health">
+            <div class="landing-feature-card__icon">
+              <span class="material-symbols-outlined">monitoring</span>
+            </div>
+            <h2>Health Tracking</h2>
+            <p>Log your vitals, sleep, and movement with a calmer dashboard rhythm that feels structured, not clinical.</p>
+          </article>
+
+          <article class="landing-feature-card landing-feature-card--copy landing-feature-card--dashboard">
+            <div class="landing-feature-card__icon">
+              <span class="material-symbols-outlined">dashboard</span>
+            </div>
+            <h2>Smart Dashboard</h2>
+            <p>See your wellness landscape at a glance with Health Pulse patterns, hydration, movement, and sleep in one flow.</p>
+          </article>
+
+          <article class="landing-feature-card landing-feature-card--accent landing-feature-card--community">
+            <div class="landing-feature-card__icon">
+              <span class="material-symbols-outlined">groups</span>
+            </div>
+            <h2>Community Circles</h2>
+            <p>Join intimate, focused groups that share your rhythm and support your gentle progress.</p>
+          </article>
+
+          <article class="landing-feature-card landing-feature-card--copy landing-feature-card--resources">
+            <div class="landing-feature-card__icon">
+              <span class="material-symbols-outlined">auto_stories</span>
+            </div>
+            <h2>Wellness Picks</h2>
+            <p>Receive personalized, community-matched resources that stay readable, relevant, and easy to revisit.</p>
+          </article>
+
+          <article class="landing-feature-card landing-feature-card--brand" aria-hidden="true">
+            <img class="landing-feature-card__brand-logo" src="/images/healthopia_logo_nobg.png" alt="">
+            <strong>Healthopia</strong>
+            <span>Gentle precision in wellness</span>
+          </article>
+        </section>
+      </section>
+
+      <section class="landing-principles">
+        <h2>Build consistency, not pressure.</h2>
+        <p>
+          We believe true wellness stems from self-compassion. Healthopia is designed to be a
+          quiet companion in your journey, offering structural support without the anxiety of streaks
+          or harsh notifications. Every day is a fresh opportunity to listen to your body.
+        </p>
+        <div class="landing-principles__icons" aria-hidden="true">
+          <span class="material-symbols-outlined">spa</span>
+          <span class="material-symbols-outlined">self_improvement</span>
+          <span class="material-symbols-outlined">health_and_safety</span>
+        </div>
+      </section>
+
+      <section class="landing-cta">
+        <div class="landing-cta__badge" aria-hidden="true">
+          <span class="material-symbols-outlined">favorite</span>
+        </div>
+        <h2>Start your wellness journey today</h2>
+        <p>
+          Join a community that values deep rests as much as mindful action.
+          No credit card required to breathe easier.
+        </p>
+        <a class="button-primary landing-button-primary" href="/register">Create Free Account</a>
+      </section>
+    </main>
+
+    <footer class="landing-footer">
+      <div>
+        <strong>Healthopia</strong>
+        <span>&copy; 2026 Healthopia. Gentle precision in wellness.</span>
+      </div>
+      <div class="landing-footer__links">
+        <a href="/sign-in">Privacy Policy</a>
+        <a href="/sign-in">Terms Of Service</a>
+        <a href="/sign-in">Contact Us</a>
+        <a href="/sign-in">Accessibility</a>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="/js/landing.js"></script>
+</body>
+</html>

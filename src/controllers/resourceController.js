@@ -11,18 +11,8 @@ function normalizeCommunityCategory(value = '') {
     .replace(/^-+|-+$/g, '');
 }
 
-function shuffle(items) {
-  const shuffledItems = [...items];
-
-  for (let index = shuffledItems.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
-    [shuffledItems[index], shuffledItems[swapIndex]] = [shuffledItems[swapIndex], shuffledItems[index]];
-  }
-
-  return shuffledItems;
-}
-
 const getWellnessPicks = asyncHandler(async (req, res) => {
+  const pageSize = 5;
   const user = await User.findById(req.user._id)
     .select('communitiesJoined')
     .populate('communitiesJoined', 'communityName')
@@ -37,40 +27,46 @@ const getWellnessPicks = asyncHandler(async (req, res) => {
   if (!joinedCategories.length) {
     res.json({
       success: true,
-      data: []
+      data: [],
+      currentPage: 1,
+      totalPages: 1
     });
     return;
   }
 
-  const resources = await Resource.find({
+  const filter = {
     category: { $in: joinedCategories }
-  })
-    .select('title description category source readTime url priority createdAt')
-    .lean();
+  };
 
-  if (!resources.length) {
+  const totalResources = await Resource.countDocuments(filter);
+  const totalPages = Math.max(1, Math.ceil(totalResources / pageSize));
+  const requestedPage = Number.parseInt(req.query.p || req.query.page || '1', 10);
+  const currentPage = Number.isFinite(requestedPage)
+    ? Math.min(Math.max(requestedPage, 1), totalPages)
+    : 1;
+
+  if (!totalResources) {
     res.json({
       success: true,
-      data: []
+      data: [],
+      currentPage: 1,
+      totalPages: 1
     });
     return;
   }
 
-  const resourcesByCategory = shuffle(resources).reduce((groups, resource) => {
-    if (!groups.has(resource.category)) {
-      groups.set(resource.category, []);
-    }
-
-    groups.get(resource.category).push(resource);
-    return groups;
-  }, new Map());
-
-  const selectedResources = shuffle(joinedCategories)
-    .flatMap((category) => (resourcesByCategory.get(category) || []).slice(0, 2));
+  const resources = await Resource.find(filter)
+    .sort({ priority: 1, communityTag: 1, title: 1, _id: 1 })
+    .skip((currentPage - 1) * pageSize)
+    .limit(pageSize)
+    .select('title description category communityTag source readTime url priority createdAt')
+    .lean();
 
   res.json({
     success: true,
-    data: shuffle(selectedResources).slice(0, 10)
+    data: resources,
+    currentPage,
+    totalPages
   });
 });
 

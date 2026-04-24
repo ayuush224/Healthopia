@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" role="img" aria-label="Posts preview">
+  <rect width="720" height="440" rx="34" fill="#eef4fb"/>
+  <text x="34" y="54" font-family="Manrope, Arial" font-size="24" font-weight="800" fill="#1c2a38">Community post</text>
+  <rect x="18" y="18" width="684" height="404" rx="28" fill="#ffffff" opacity="0.98"/>
+  <rect x="40" y="40" width="92" height="34" rx="16" fill="#dce8f9"/>
+  <text x="86" y="62" text-anchor="middle" font-family="Inter, Arial" font-size="16" font-weight="700" fill="#1e6b7e">Fitness</text>
+  <text x="40" y="102" font-family="Manrope, Arial" font-size="26" font-weight="800" fill="#182432">Your mental health is part of your fitness journey</text>
+  <text x="628" y="62" font-family="Inter, Arial" font-size="16" fill="#7d91a4">10s ago</text>
+  <text x="40" y="138" font-family="Inter, Arial" font-size="18" fill="#566a7d">Share longer reflections, gentle insights, and practical support</text>
+  <text x="40" y="166" font-family="Inter, Arial" font-size="18" fill="#566a7d">inside the communities you join.</text>
+  <rect x="40" y="222" width="620" height="150" rx="24" fill="#a6d9c2"/>
+  <circle cx="318" cy="280" r="56" fill="#f7c049"/>
+  <path d="M250 335c40-70 116-89 187-53 20 10 37 25 47 43v47H240l10-37Z" fill="#0e6677"/>
+  <path d="M94 388h76" stroke="#1e6b7e" stroke-width="6" stroke-linecap="round"/>
+  <path d="M180 388h60" stroke="#6d8ebf" stroke-width="6" stroke-linecap="round"/>
+</svg>

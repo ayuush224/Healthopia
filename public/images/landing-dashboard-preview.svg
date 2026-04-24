@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" role="img" aria-label="Dashboard preview">
+  <rect width="720" height="440" rx="34" fill="#eef4fb"/>
+  <text x="34" y="54" font-family="Manrope, Arial" font-size="24" font-weight="800" fill="#1c2a38">Health dashboard</text>
+  <rect x="32" y="84" width="656" height="178" rx="30" fill="#ffffff"/>
+  <text x="56" y="126" font-family="Manrope, Arial" font-size="24" font-weight="800" fill="#182432">Health activity</text>
+  <rect x="520" y="104" width="130" height="40" rx="20" fill="#dce8f9"/>
+  <text x="585" y="130" text-anchor="middle" font-family="Inter, Arial" font-size="16" font-weight="700" fill="#1e6b7e">Friday, Apr 24</text>
+  <g>
+    <rect x="64" y="150" width="58" height="86" rx="24" fill="#dfe7ef"/>
+    <rect x="148" y="150" width="58" height="86" rx="24" fill="#dfe7ef"/>
+    <rect x="232" y="150" width="58" height="86" rx="24" fill="#dfe7ef"/>
+    <rect x="316" y="150" width="58" height="86" rx="24" fill="#dfe7ef"/>
+    <rect x="400" y="150" width="58" height="86" rx="24" fill="#dfe7ef"/>
+    <rect x="484" y="150" width="58" height="86" rx="24" fill="#dfe7ef"/>
+    <rect x="568" y="150" width="58" height="86" rx="24" fill="#ffffff" stroke="#1e6b7e" stroke-width="4"/>
+    <rect x="578" y="188" width="38" height="20" rx="12" fill="#74d3c0"/>
+    <rect x="578" y="208" width="38" height="18" rx="12" fill="#5b86e9"/>
+    <rect x="578" y="226" width="38" height="14" rx="10" fill="#36a66d"/>
+  </g>
+  <text x="93" y="274" text-anchor="middle" font-family="Inter, Arial" font-size="15" font-weight="700" fill="#4f6580">Sat</text>
+  <text x="177" y="274" text-anchor="middle" font-family="Inter, Arial" font-size="15" font-weight="700" fill="#4f6580">Sun</text>
+  <text x="261" y="274" text-anchor="middle" font-family="Inter, Arial" font-size="15" font-weight="700" fill="#4f6580">Mon</text>
+  <text x="345" y="274" text-anchor="middle" font-family="Inter, Arial" font-size="15" font-weight="700" fill="#4f6580">Tue</text>
+  <text x="429" y="274" text-anchor="middle" font-family="Inter, Arial" font-size="15" font-weight="700" fill="#4f6580">Wed</text>
+  <text x="513" y="274" text-anchor="middle" font-family="Inter, Arial" font-size="15" font-weight="700" fill="#4f6580">Thu</text>
+  <text x="597" y="274" text-anchor="middle" font-family="Inter, Arial" font-size="15" font-weight="700" fill="#4f6580">Fri</text>
+  <rect x="32" y="286" width="208" height="126" rx="28" fill="#ffffff"/>
+  <rect x="256" y="286" width="208" height="126" rx="28" fill="#ffffff"/>
+  <rect x="480" y="286" width="208" height="126" rx="28" fill="#ffffff"/>
+  <text x="56" y="320" font-family="Inter, Arial" font-size="15" font-weight="800" fill="#2f9f68">WALKING</text>
+  <text x="56" y="362" font-family="Manrope, Arial" font-size="30" font-weight="800" fill="#2f9f68">4k steps</text>
+  <text x="56" y="392" font-family="Inter, Arial" font-size="16" fill="#63788c">No previous day logged</text>
+  <text x="280" y="320" font-family="Inter, Arial" font-size="15" font-weight="800" fill="#4f83f1">RUNNING</text>
+  <text x="280" y="362" font-family="Manrope, Arial" font-size="30" font-weight="800" fill="#4f83f1">2 km</text>
+  <text x="280" y="392" font-family="Inter, Arial" font-size="16" fill="#63788c">No previous day logged</text>
+  <text x="504" y="320" font-family="Inter, Arial" font-size="15" font-weight="800" fill="#70d4c2">SLEEP</text>
+  <text x="504" y="362" font-family="Manrope, Arial" font-size="30" font-weight="800" fill="#70d4c2">4 h</text>
+  <text x="504" y="392" font-family="Inter, Arial" font-size="16" fill="#63788c">No previous day logged</text>
+</svg>

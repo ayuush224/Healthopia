@@ -1,10 +1,10 @@
 function buildPostQuery(query) {
   return query
-    .populate('user', 'name username')
-    .populate('createdBy', 'name username')
+    .populate('user', 'name username avatar')
+    .populate('createdBy', 'name username avatar')
     .populate('community', 'communityName description communityPhoto noOfActiveMembers')
     .populate('communityId', 'communityName description communityPhoto noOfActiveMembers')
-    .populate('comments.userId', 'name username');
+    .populate('comments.userId', 'name username avatar');
 }
 
 function normalizePostForClient(post, userId) {

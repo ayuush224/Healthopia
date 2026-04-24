@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" role="img" aria-label="Resources preview">
+  <rect width="720" height="440" rx="34" fill="#eef4fb"/>
+  <text x="34" y="54" font-family="Manrope, Arial" font-size="24" font-weight="800" fill="#1c2a38">Wellness Picks</text>
+  <g>
+    <rect x="32" y="84" width="656" height="96" rx="24" fill="#ffffff"/>
+    <rect x="56" y="104" width="122" height="30" rx="15" fill="#dce8f9"/>
+    <rect x="188" y="104" width="106" height="30" rx="15" fill="#dce8f9"/>
+    <text x="117" y="124" text-anchor="middle" font-family="Inter, Arial" font-size="15" font-weight="700" fill="#1e6b7e">Mayo</text>
+    <text x="241" y="124" text-anchor="middle" font-family="Inter, Arial" font-size="15" font-weight="700" fill="#1e6b7e">Fitness</text>
+    <text x="56" y="151" font-family="Manrope, Arial" font-size="20" font-weight="800" fill="#182432">Exercise benefits for long-term health</text>
+    <text x="604" y="124" font-family="Inter, Arial" font-size="15" fill="#7d91a4">5 min read</text>
+  </g>
+  <g>
+    <rect x="32" y="196" width="656" height="96" rx="24" fill="#ffffff"/>
+    <rect x="56" y="216" width="122" height="30" rx="15" fill="#dce8f9"/>
+    <rect x="188" y="216" width="126" height="30" rx="15" fill="#dce8f9"/>
+    <text x="117" y="236" text-anchor="middle" font-family="Inter, Arial" font-size="15" font-weight="700" fill="#1e6b7e">Harvard</text>
+    <text x="251" y="236" text-anchor="middle" font-family="Inter, Arial" font-size="15" font-weight="700" fill="#1e6b7e">Wellness</text>
+    <text x="56" y="263" font-family="Manrope, Arial" font-size="20" font-weight="800" fill="#182432">Everyday wellness topics made readable</text>
+    <text x="604" y="236" font-family="Inter, Arial" font-size="15" fill="#7d91a4">5 min read</text>
+  </g>
+  <g>
+    <rect x="32" y="308" width="656" height="96" rx="24" fill="#ffffff"/>
+    <rect x="56" y="328" width="122" height="30" rx="15" fill="#dce8f9"/>
+    <rect x="188" y="328" width="122" height="30" rx="15" fill="#dce8f9"/>
+    <text x="117" y="348" text-anchor="middle" font-family="Inter, Arial" font-size="15" font-weight="700" fill="#1e6b7e">Mayo</text>
+    <text x="249" y="348" text-anchor="middle" font-family="Inter, Arial" font-size="15" font-weight="700" fill="#1e6b7e">Hydration</text>
+    <text x="56" y="375" font-family="Manrope, Arial" font-size="20" font-weight="800" fill="#182432">How much water should you drink daily?</text>
+    <text x="604" y="348" font-family="Inter, Arial" font-size="15" fill="#7d91a4">4 min read</text>
+  </g>
+</svg>

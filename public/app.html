@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Soft Health | Community Sanctuary</title>
+  <title>Healthopia | Wellness Community</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -17,7 +17,10 @@
   <header class="topbar">
     <div class="left">
       <div class="topbar__brand-group">
-        <a href="/" class="brand" data-route="/">Soft Health</a>
+        <a href="/" class="brand" data-route="/">
+          <img class="brand__logo" src="/images/healthopia_logo_nobg.png" alt="Healthopia logo">
+          <span class="brand__text">Healthopia</span>
+        </a>
         <label class="searchbar">
           <span class="material-symbols-outlined">search</span>
           <input id="global-search" type="search" placeholder="Search communities, experts..." autocomplete="off">
@@ -71,6 +74,10 @@
           <span class="material-symbols-outlined">auto_stories</span>
           <span>Wellness Picks</span>
         </button>
+        <button class="sidebar-nav__item" data-action="open-first-community">
+          <span class="material-symbols-outlined">verified</span>
+          <span>Communities</span>
+        </button>
       </nav>
 
       <div class="sidebar__section sidebar__section--circle">
@@ -98,9 +105,13 @@
       <section id="profile-stats-sidebar" class="stat-panel"></section>
 
       <section>
-        <h3 class="trending-title">Trending Circles</h3>
-        <ul id="trending-communities-list" class="trending-list"></ul>
+        <h3 class="sidebar-title">
+          <span class="material-symbols-outlined">groups</span>
+          <span>Community Recommendations</span>
+        </h3>
+        <div id="community-recommendations-sidebar" class="sidebar-stack"></div>
       </section>
+
     </aside>
   </div>
 
@@ -124,7 +135,7 @@
     </button>
     <button type="button" class="mobile-nav__item" data-route="/wellness-picks">
       <span class="material-symbols-outlined">auto_stories</span>
-      <span>Picks</span>
+      <span>Resources</span>
     </button>
     <button type="button" class="mobile-nav__item" data-route="/profile">
       <span class="material-symbols-outlined">person</span>

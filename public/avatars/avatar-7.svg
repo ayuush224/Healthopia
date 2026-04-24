@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360" role="img" aria-label="Avatar illustration">
+  <rect width="360" height="360" fill="white"/>
+  <circle cx="180" cy="180" r="132" fill="#f6f3f3"/>
+  <path d="M117 91c7-34 34-59 71-59 34 0 61 21 72 54l3 12H114l3-7Z" fill="#f16932"/><rect x="112" y="92" width="154" height="32" rx="16" fill="#f16932"/>
+  <path d="M140 108c8-17 23-28 41-28h2c18 0 34 11 42 28l5 11v34c0 28-22 50-50 50s-50-22-50-50v-34l10-11Z" fill="#f3b08a"/>
+  <ellipse cx="155" cy="126" rx="5" ry="8" fill="#161616"/><ellipse cx="196" cy="126" rx="5" ry="8" fill="#161616"/>
+  <path d="M175 131l-8 26h15" stroke="#161616" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M146 171c10 10 28 10 38 0" stroke="#161616" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M118 233c8-35 37-56 73-56 36 0 65 21 73 56" fill="#d8e8f3"/><path d="M147 185c7 11 19 18 34 18s28-7 35-18" stroke="#161616" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M126 92h108" stroke="#161616" stroke-width="4" stroke-linecap="round"/><path d="M146 92v16M171 92v18M196 92v18M221 92v16" stroke="#161616" stroke-width="4" stroke-linecap="round"/>
+  <path d="M132 236c10-7 20-7 30 0 10-7 20-7 30 0 10-7 20-7 30 0 10-7 20-7 30 0" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M120 255c10-7 20-7 30 0 10-7 20-7 30 0 10-7 20-7 30 0 10-7 20-7 30 0 10-7 20-7 30 0" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round"/>
+</svg>

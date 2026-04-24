@@ -6,7 +6,7 @@ const { buildPostQuery, decoratePostsForUser } = require('../utils/postQuery');
 
 const getProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id)
-    .select('name email username posts likedPosts communitiesJoined')
+    .select('name email username avatar posts likedPosts communitiesJoined')
     .populate(
     'communitiesJoined',
     'communityName description noOfActiveMembers communityPhoto'

@@ -7,6 +7,7 @@ const router = express.Router();
 
 router.use(requireApiAuth);
 
+router.get('/', getWellnessPicks);
 router.get('/picks', getWellnessPicks);
 
 module.exports = router;

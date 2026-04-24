@@ -2,6 +2,8 @@ import { apiFetch } from './api.js';
 
 const form = document.getElementById('register-form');
 const message = document.getElementById('auth-message');
+const avatarInput = document.getElementById('avatar-input');
+const avatarButtons = [...document.querySelectorAll('[data-avatar-option]')];
 
 function setMessage(text) {
   if (!text) {
@@ -12,6 +14,26 @@ function setMessage(text) {
 
   message.textContent = text;
   message.className = 'inline-message';
+}
+
+function setSelectedAvatar(value) {
+  avatarInput.value = value;
+
+  avatarButtons.forEach((button) => {
+    const isSelected = button.dataset.avatarOption === value;
+    button.classList.toggle('is-selected', isSelected);
+    button.setAttribute('aria-checked', String(isSelected));
+  });
+}
+
+avatarButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    setSelectedAvatar(button.dataset.avatarOption || '');
+  });
+});
+
+if (avatarButtons[0] && !avatarInput.value) {
+  setSelectedAvatar(avatarButtons[0].dataset.avatarOption || '');
 }
 
 form.addEventListener('submit', async (event) => {
@@ -30,7 +52,8 @@ form.addEventListener('submit', async (event) => {
       body: JSON.stringify({
         username: formData.get('username'),
         email: formData.get('email'),
-        password: formData.get('password')
+        password: formData.get('password'),
+        avatar: formData.get('avatar')
       })
     });
 

@@ -69,7 +69,7 @@ export function formatWater(value = 0) {
 export function getInitials(value = '') {
   const parts = String(value).trim().split(/\s+/).filter(Boolean);
   if (!parts.length) {
-    return 'SH';
+    return 'HP';
   }
   if (parts.length === 1) {
     return parts[0].slice(0, 2).toUpperCase();
@@ -78,10 +78,19 @@ export function getInitials(value = '') {
 }
 
 export function renderAvatar(entity, size = 'default') {
-  const name = entity?.name || entity?.communityName || entity?.username || 'Soft Health';
+  const name = entity?.name || entity?.communityName || entity?.username || 'Healthopia';
   const accentVars = getAccentVars(name);
   const sizeClass = size === 'small' ? 'avatar avatar--small' : size === 'large' ? 'avatar avatar--large' : 'avatar';
   const initials = escapeHtml(getInitials(name));
+  const avatarValue = String(entity?.avatar || '').trim();
+
+  if (avatarValue) {
+    const avatarUrl = avatarValue.startsWith('/')
+      ? avatarValue
+      : `/avatars/${encodeURIComponent(avatarValue)}`;
+
+    return `<span class="${sizeClass}" style="${accentVars}"><img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(name)} avatar"></span>`;
+  }
 
   return `<span class="${sizeClass}" style="${accentVars}"><span>${initials}</span></span>`;
 }

@@ -26,7 +26,7 @@ async function loadUserFromToken(token) {
     throw new AppError('Authentication required.', 401);
   }
 
-  let user = await User.findById(payload.userId).select('_id name username email');
+  let user = await User.findById(payload.userId).select('_id name username email avatar');
 
   if (!user) {
     throw new AppError('Authentication required.', 401);
@@ -82,7 +82,24 @@ function redirectIfAuthenticated(req, res, next) {
   }
 }
 
+async function optionalPageAuth(req, res, next) {
+  const token = getTokenFromRequest(req);
+
+  if (!token) {
+    return next();
+  }
+
+  try {
+    req.user = await loadUserFromToken(token);
+    return next();
+  } catch (_error) {
+    clearAuthCookie(res);
+    return next();
+  }
+}
+
 module.exports = {
+  optionalPageAuth,
   requireApiAuth,
   requirePageAuth,
   redirectIfAuthenticated

@@ -44,6 +44,9 @@ const state = {
   communities: [],
   health: null,
   wellnessPicks: [],
+  wellnessPicksPage: 1,
+  wellnessPicksTotalPages: 1,
+  wellnessPicksLoading: false,
   weeklyData: [],
   selectedDay: '',
   healthLogDate: '',
@@ -76,7 +79,8 @@ const elements = {
   joinedCommunitiesList: document.getElementById('joined-communities-list'),
   healthSidebar: document.getElementById('health-sidebar'),
   profileStatsSidebar: document.getElementById('profile-stats-sidebar'),
-  trendingCommunitiesList: document.getElementById('trending-communities-list'),
+  communityRecommendationsSidebar: document.getElementById('community-recommendations-sidebar'),
+  wellnessPicksList: document.getElementById('wellness-picks-list'),
   headerAvatar: document.getElementById('header-avatar'),
   themeToggleButton: document.getElementById('theme-toggle-button'),
   themeToggleIcon: document.getElementById('theme-toggle-icon'),
@@ -503,6 +507,42 @@ function getJoinedCommunityCategories() {
   )];
 }
 
+function formatCommunityLabel(value = '') {
+  return String(value)
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+async function loadWellnessPicksPage(page = 1) {
+  const joinedCommunityCategories = getJoinedCommunityCategories();
+
+  if (!joinedCommunityCategories.length) {
+    state.wellnessPicks = [];
+    state.wellnessPicksPage = 1;
+    state.wellnessPicksTotalPages = 1;
+    state.wellnessPicksLoading = false;
+    return;
+  }
+
+  state.wellnessPicksLoading = true;
+
+  try {
+    const resourceResponse = await apiFetch(`/api/resources?p=${page}`);
+    state.wellnessPicks = Array.isArray(resourceResponse.data) ? resourceResponse.data : [];
+    state.wellnessPicksPage = Number(resourceResponse.currentPage) || 1;
+    state.wellnessPicksTotalPages = Math.max(1, Number(resourceResponse.totalPages) || 1);
+  } catch (error) {
+    state.wellnessPicks = [];
+    state.wellnessPicksPage = 1;
+    state.wellnessPicksTotalPages = 1;
+    console.error('Failed to load wellness picks.', error);
+  } finally {
+    state.wellnessPicksLoading = false;
+  }
+}
+
 function getTrendingCommunities() {
   const joinedIds = new Set((state.profile?.communitiesJoined || []).map((community) => community._id));
   return state.communities
@@ -804,6 +844,7 @@ function renderProfileTabs() {
 
 function renderWellnessCard(resource) {
   const resourceUrl = String(resource?.url || '').trim();
+  const communityTag = escapeHtml(resource?.communityTag || formatCommunityLabel(resource?.category));
   const sourceLabel = escapeHtml(resource?.source || 'Wellness Source');
   const title = escapeHtml(resource?.title || 'Untitled resource');
   const description = escapeHtml(resource?.description || '');
@@ -825,12 +866,15 @@ function renderWellnessCard(resource) {
   return `
     <article class="health-card wellness-card">
       <div class="wellness-card__meta">
-        <span class="micro-chip">${sourceLabel}</span>
+        <div class="wellness-card__badges">
+          <span class="micro-chip">${sourceLabel}</span>
+          <span class="micro-chip">${communityTag}</span>
+        </div>
         <span class="wellness-card__time">${readTime}</span>
       </div>
       <div class="wellness-card__copy">
         <h4>${title}</h4>
-        <p class="wellness-card__description">${description}</p>
+        <p class="wellness-card__description wellness-card__description--expanded">${description}</p>
       </div>
       <div class="wellness-card__footer">
         ${actionMarkup}
@@ -850,6 +894,14 @@ function renderWellnessPicksBody() {
     `;
   }
 
+  if (state.wellnessPicksLoading) {
+    return `
+      <article class="health-card wellness-card wellness-card--empty">
+        <p>Loading wellness picks...</p>
+      </article>
+    `;
+  }
+
   if (!state.wellnessPicks.length) {
     return `
       <article class="health-card wellness-card wellness-card--empty">
@@ -862,18 +914,27 @@ function renderWellnessPicksBody() {
     <div class="wellness-picks-list">
       ${state.wellnessPicks.map((resource) => renderWellnessCard(resource)).join('')}
     </div>
+    <div class="wellness-pagination">
+      <button class="soft-button" type="button" data-action="wellness-prev-page" ${state.wellnessPicksPage <= 1 || state.wellnessPicksLoading ? 'disabled' : ''}>
+        &larr; Prev
+      </button>
+      <span class="wellness-pagination__status">Page ${state.wellnessPicksPage} of ${state.wellnessPicksTotalPages}</span>
+      <button class="soft-button" type="button" data-action="wellness-next-page" ${state.wellnessPicksPage >= state.wellnessPicksTotalPages || state.wellnessPicksLoading ? 'disabled' : ''}>
+        Next &rarr;
+      </button>
+    </div>
   `;
 }
 
 function renderSidebar() {
-  const profileName = state.profile?.name || 'Soft Health';
+  const profileName = state.profile?.name || 'Healthopia';
   elements.headerAvatar.innerHTML = renderAvatar(state.profile || { name: profileName }, 'small');
   elements.profileMenu.innerHTML = `
     <div class="profile-menu__card">
       <div class="profile-menu__header">
         ${renderAvatar(state.profile || { name: profileName }, 'large')}
         <div class="profile-menu__copy">
-          <strong>${escapeHtml(state.profile?.name || 'Soft Health Member')}</strong>
+          <strong>${escapeHtml(state.profile?.name || 'Healthopia Member')}</strong>
           <span>@${escapeHtml(state.profile?.username || 'member')}</span>
         </div>
       </div>
@@ -963,23 +1024,32 @@ function renderSidebar() {
     </div>
   `;
 
-  const trendingCommunities = getTrendingCommunities();
-  elements.trendingCommunitiesList.innerHTML = trendingCommunities.length
-    ? trendingCommunities.map((community) => `
-        <li class="trending-item">
-          <div class="trending-item__main">
-            <span class="accent-tile" style="${getAccentVars(community.communityName)}">${escapeHtml(community.communityName.charAt(0))}</span>
-            <div>
-              <strong>${escapeHtml(community.communityName)}</strong>
-              <p class="micro-copy">${formatCompactNumber(community.noOfActiveMembers)} members</p>
+  const recommendedCommunities = getTrendingCommunities();
+  if (elements.communityRecommendationsSidebar) {
+    elements.communityRecommendationsSidebar.innerHTML = recommendedCommunities.length
+      ? recommendedCommunities.map((community) => `
+          <article class="recommendation-card">
+            <div class="recommendation-card__main">
+              <span class="accent-tile" style="${getAccentVars(community.communityName)}">${escapeHtml(community.communityName.charAt(0))}</span>
+              <div class="recommendation-card__copy">
+                <h3>${escapeHtml(community.communityName)}</h3>
+              </div>
             </div>
-          </div>
-          <button class="join-button" type="button" data-action="join-community" data-community-id="${community._id}">
-            Join
-          </button>
-        </li>
-      `).join('')
-    : '<li class="muted-copy">You have already joined the highlighted circles.</li>';
+            <button class="join-button recommendation-card__button" type="button" data-action="join-community" data-community-id="${community._id}">
+              Join
+            </button>
+          </article>
+        `).join('')
+      : `
+          <article class="health-card wellness-card wellness-card--empty">
+            <p>You have already explored every available community.</p>
+          </article>
+        `;
+  }
+
+  if (elements.wellnessPicksList) {
+    elements.wellnessPicksList.innerHTML = renderWellnessPicksBody();
+  }
 
   document.querySelectorAll('.sidebar-nav__item').forEach((item) => {
     item.classList.remove('is-active');
@@ -987,11 +1057,17 @@ function renderSidebar() {
     if (route && window.location.pathname === route) {
       item.classList.add('is-active');
     }
+    if (window.location.pathname.startsWith('/community/') && item.dataset.action === 'open-first-community') {
+      item.classList.add('is-active');
+    }
   });
 
   document.querySelectorAll('.mobile-nav__item').forEach((item) => {
     item.classList.remove('is-active');
     if (item.dataset.route === window.location.pathname) {
+      item.classList.add('is-active');
+    }
+    if (window.location.pathname.startsWith('/community/') && item.dataset.action === 'open-first-community') {
       item.classList.add('is-active');
     }
   });
@@ -1126,7 +1202,11 @@ function renderPostCard(post, options = {}) {
         <div class="post-card__header">
           <div class="post-card__meta">
             <div class="meta-copy">
-              <h3>${community ? escapeHtml(community.communityName) : 'Community'}</h3>
+              <h3>
+                ${community?._id
+                  ? `<button class="post-community-link" type="button" data-route="/community/${community._id}">${escapeHtml(community.communityName)}</button>`
+                  : (community ? escapeHtml(community.communityName) : 'Community')}
+              </h3>
               <p class="meta-line">
                 ${escapeHtml(formatRelativeTime(post.updatedAt || post.createdAt))}
                 ${author ? `&bull; ${escapeHtml(author.username ? `@${author.username}` : author.name || 'Member')}` : ''}
@@ -1271,7 +1351,7 @@ function renderWellnessPicksView() {
 function renderProfileView() {
   const profilePosts = getProfilePostsByTab();
   const activeTab = PROFILE_TABS.find((tab) => tab.id === state.profileTab);
-  const profileName = state.profile?.name || 'Soft Health Member';
+  const profileName = state.profile?.name || 'Healthopia Member';
   const profileUsername = state.profile?.username || 'member';
   const emptyTitle = state.profileTab === 'liked'
     ? "You haven't liked any of your visible posts yet"
@@ -1637,7 +1717,7 @@ function renderHealthView() {
   elements.viewRoot.innerHTML = `
     <section class="health-layout">
       <div class="page-heading">
-        <h1>Dashboard</h1>
+        <h1>Health-Pulse</h1>
         <p>Review the last seven days, compare daily movement and sleep, and keep today's activity current.</p>
       </div>
 
@@ -1673,11 +1753,6 @@ function renderCurrentView() {
     return;
   }
 
-  if (route.name === 'wellness-picks') {
-    renderWellnessPicksView();
-    return;
-  }
-
   if (route.name === 'community') {
     renderCommunityView();
     return;
@@ -1690,6 +1765,11 @@ function renderCurrentView() {
 
   if (route.name === 'health') {
     renderHealthView();
+    return;
+  }
+
+  if (route.name === 'wellness-picks') {
+    renderWellnessPicksView();
   }
 }
 
@@ -1733,18 +1813,7 @@ async function loadShellData(options = {}) {
     state.savedPosts = [];
   }
 
-  const joinedCommunityCategories = getJoinedCommunityCategories();
-  if (joinedCommunityCategories.length) {
-    try {
-      const resourceResponse = await apiFetch('/api/resources/picks');
-      state.wellnessPicks = Array.isArray(resourceResponse.data) ? resourceResponse.data : [];
-    } catch (error) {
-      state.wellnessPicks = [];
-      console.error('Failed to load wellness picks.', error);
-    }
-  } else {
-    state.wellnessPicks = [];
-  }
+  await loadWellnessPicksPage(1);
 
   state.shellHydrated = true;
 
@@ -1794,6 +1863,11 @@ async function loadViewData() {
     state.selectedDay = state.weeklyData.some((day) => day.date === state.selectedDay)
       ? state.selectedDay
       : response.selectedDay || getDashboardTodayKey();
+    return;
+  }
+
+  if (route.name === 'wellness-picks') {
+    return;
   }
 }
 
@@ -1806,7 +1880,7 @@ async function refreshView(options = {}) {
     await loadShellData({ force: options.refreshShell });
     const route = getRoute();
 
-    if (needsOnboarding() && route.name !== 'wellness-picks') {
+    if (needsOnboarding()) {
       renderSidebar();
       renderOnboardingGate();
       renderOnboardingModal();
@@ -2246,7 +2320,7 @@ document.addEventListener('click', async (event) => {
   if (routeButton) {
     event.preventDefault();
 
-    if (needsOnboarding() && routeButton.dataset.route !== '/wellness-picks') {
+    if (needsOnboarding()) {
       renderOnboardingModal();
       showToast(`Join at least ${MIN_ONBOARDING_COMMUNITIES} communities to continue.`, 'error');
       return;
@@ -2305,6 +2379,24 @@ document.addEventListener('click', async (event) => {
 
   if (action === 'leave-community') {
     await handleLeaveCommunity(actionButton.dataset.communityId);
+    return;
+  }
+
+  if (action === 'wellness-prev-page') {
+    if (state.wellnessPicksPage > 1 && !state.wellnessPicksLoading) {
+      await loadWellnessPicksPage(state.wellnessPicksPage - 1);
+      renderSidebar();
+      renderCurrentView();
+    }
+    return;
+  }
+
+  if (action === 'wellness-next-page') {
+    if (state.wellnessPicksPage < state.wellnessPicksTotalPages && !state.wellnessPicksLoading) {
+      await loadWellnessPicksPage(state.wellnessPicksPage + 1);
+      renderSidebar();
+      renderCurrentView();
+    }
     return;
   }
 

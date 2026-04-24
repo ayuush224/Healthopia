@@ -6,7 +6,8 @@
     "source": "Mayo Clinic",
     "readTime": "5 min read",
     "url": "https://www.mayoclinic.org/healthy-lifestyle/fitness/in-depth/exercise/art-20048389",
-    "priority": 1
+    "priority": 1,
+    "communityTag": "Fitness"
   },
   {
     "title": "Fitness Program: 5 Steps to Get Started",
@@ -15,7 +16,8 @@
     "source": "Mayo Clinic",
     "readTime": "4 min read",
     "url": "https://www.mayoclinic.org/healthy-lifestyle/fitness/in-depth/fitness/art-20048269",
-    "priority": 2
+    "priority": 2,
+    "communityTag": "Fitness"
   },
   {
     "title": "Exercise and Physical Fitness Overview",
@@ -24,7 +26,8 @@
     "source": "MedlinePlus",
     "readTime": "6 min read",
     "url": "https://medlineplus.gov/exerciseandphysicalfitness.html",
-    "priority": 3
+    "priority": 3,
+    "communityTag": "Fitness"
   },
   {
     "title": "All Exercise and Fitness Articles",
@@ -33,7 +36,8 @@
     "source": "Harvard Health",
     "readTime": "5 min read",
     "url": "https://www.health.harvard.edu/topics/exercise-and-fitness/all",
-    "priority": 4
+    "priority": 4,
+    "communityTag": "Fitness"
   },
   {
     "title": "The Big Health Benefits of Even Small Amounts of Exercise",
@@ -42,7 +46,8 @@
     "source": "Nature",
     "readTime": "3 min read",
     "url": "https://www.nature.com/articles/d41586-026-00237-0",
-    "priority": 5
+    "priority": 5,
+    "communityTag": "Fitness"
   },
   {
     "title": "Good Sleep for Good Health",
@@ -51,7 +56,8 @@
     "source": "NIH",
     "readTime": "5 min read",
     "url": "https://newsinhealth.nih.gov/2021/04/good-sleep-good-health",
-    "priority": 1
+    "priority": 1,
+    "communityTag": "Sleep Health"
   },
   {
     "title": "About Sleep and Why It Matters",
@@ -60,7 +66,8 @@
     "source": "CDC",
     "readTime": "4 min read",
     "url": "https://www.cdc.gov/sleep/about/index.html",
-    "priority": 2
+    "priority": 2,
+    "communityTag": "Sleep Health"
   },
   {
     "title": "Sleep Health: Expert Insights and Tips",
@@ -69,7 +76,8 @@
     "source": "Harvard Health",
     "readTime": "5 min read",
     "url": "https://www.health.harvard.edu/topics/sleep/all",
-    "priority": 3
+    "priority": 3,
+    "communityTag": "Sleep Health"
   },
   {
     "title": "How to Improve Your Sleep Naturally",
@@ -78,7 +86,8 @@
     "source": "Harvard Health",
     "readTime": "5 min read",
     "url": "https://www.health.harvard.edu/topics/improving-sleep/all",
-    "priority": 4
+    "priority": 4,
+    "communityTag": "Sleep Health"
   },
   {
     "title": "Can Weekend Sleep Fix Sleep Debt?",
@@ -87,7 +96,8 @@
     "source": "Harvard Health",
     "readTime": "3 min read",
     "url": "https://www.health.harvard.edu/topics/sleep/all?page=27",
-    "priority": 5
+    "priority": 5,
+    "communityTag": "Sleep Health"
   },
   {
     "title": "Weight Loss: 6 Strategies for Success",
@@ -96,7 +106,8 @@
     "source": "Mayo Clinic",
     "readTime": "5 min read",
     "url": "http://mayoclinic.org/healthy-lifestyle/weight-loss/in-depth/weight-loss/art-20047752",
-    "priority": 1
+    "priority": 1,
+    "communityTag": "Weight Loss"
   },
   {
     "title": "Steps for Losing Weight",
@@ -105,7 +116,8 @@
     "source": "CDC",
     "readTime": "4 min read",
     "url": "https://www.cdc.gov/healthy-weight-growth/losing-weight/index.html",
-    "priority": 2
+    "priority": 2,
+    "communityTag": "Weight Loss"
   },
   {
     "title": "Diet and Weight Loss Basics",
@@ -114,7 +126,8 @@
     "source": "Harvard Health",
     "readTime": "5 min read",
     "url": "https://www.health.harvard.edu/topics/diet-and-weight-loss",
-    "priority": 3
+    "priority": 3,
+    "communityTag": "Weight Loss"
   },
   {
     "title": "Weight Loss and Diet Articles Collection",
@@ -123,7 +136,8 @@
     "source": "Harvard Health",
     "readTime": "5 min read",
     "url": "https://www.health.harvard.edu/topics/diet-and-weight-loss/all",
-    "priority": 4
+    "priority": 4,
+    "communityTag": "Weight Loss"
   },
   {
     "title": "Losing Weight for Better Heart Health",
@@ -132,7 +146,8 @@
     "source": "American Heart Association",
     "readTime": "4 min read",
     "url": "https://www.heart.org/en/healthy-living/healthy-eating/losing-weight",
-    "priority": 5
+    "priority": 5,
+    "communityTag": "Weight Loss"
   },
   {
     "title": "Yoga for Health: What Science Says",
@@ -141,7 +156,8 @@
     "source": "NCCIH",
     "readTime": "5 min read",
     "url": "https://www.nccih.nih.gov/health/providers/digest/yoga-for-health-science",
-    "priority": 1
+    "priority": 1,
+    "communityTag": "Yoga"
   },
   {
     "title": "12 Benefits of Yoga Backed by Science",
@@ -150,7 +166,8 @@
     "source": "Healthline",
     "readTime": "4 min read",
     "url": "https://www.healthline.com/nutrition/13-benefits-of-yoga",
-    "priority": 2
+    "priority": 2,
+    "communityTag": "Yoga"
   },
   {
     "title": "9 Key Benefits of Practicing Yoga",
@@ -159,7 +176,8 @@
     "source": "Johns Hopkins Medicine",
     "readTime": "4 min read",
     "url": "https://www.hopkinsmedicine.org/health/wellness-and-prevention/9-benefits-of-yoga",
-    "priority": 3
+    "priority": 3,
+    "communityTag": "Yoga"
   },
   {
     "title": "Yoga: Types, Methods, and Risks",
@@ -168,7 +186,8 @@
     "source": "Medical News Today",
     "readTime": "5 min read",
     "url": "https://www.medicalnewstoday.com/articles/286745",
-    "priority": 4
+    "priority": 4,
+    "communityTag": "Yoga"
   },
   {
     "title": "Yoga Research and Scientific Overview",
@@ -177,7 +196,8 @@
     "source": "NCCIH",
     "readTime": "5 min read",
     "url": "https://www.nccih.nih.gov/health/providers/digest/yoga-for-health-science",
-    "priority": 5
+    "priority": 5,
+    "communityTag": "Yoga"
   },
   {
     "title": "How Much Water Should You Drink Daily?",
@@ -186,7 +206,8 @@
     "source": "Mayo Clinic",
     "readTime": "4 min read",
     "url": "https://www.mayoclinic.org/healthy-lifestyle/nutrition-and-healthy-eating/in-depth/water/art-20044256",
-    "priority": 1
+    "priority": 1,
+    "communityTag": "Hydration"
   },
   {
     "title": "Water and Healthier Drink Choices",
@@ -195,7 +216,8 @@
     "source": "CDC",
     "readTime": "4 min read",
     "url": "https://www.cdc.gov/healthy-weight-growth/water-healthy-drinks/index.html",
-    "priority": 2
+    "priority": 2,
+    "communityTag": "Hydration"
   },
   {
     "title": "The Importance of Hydration",
@@ -204,7 +226,8 @@
     "source": "Harvard T.H. Chan School",
     "readTime": "5 min read",
     "url": "https://hsph.harvard.edu/news/the-importance-of-hydration/",
-    "priority": 3
+    "priority": 3,
+    "communityTag": "Hydration"
   },
   {
     "title": "Why Staying Hydrated Matters",
@@ -213,7 +236,8 @@
     "source": "Harvard Health",
     "readTime": "4 min read",
     "url": "https://www.health.harvard.edu/healthy-aging-and-longevity/the-importance-of-staying-hydrated",
-    "priority": 4
+    "priority": 4,
+    "communityTag": "Hydration"
   },
   {
     "title": "10 Reasons Why Hydration Is Important",
@@ -222,7 +246,8 @@
     "source": "National Council on Aging",
     "readTime": "3 min read",
     "url": "https://www.ncoa.org/article/10-reasons-why-hydration-is-important/",
-    "priority": 5
+    "priority": 5,
+    "communityTag": "Hydration"
   },
   {
     "title": "Mental Health: Understanding the Basics",
@@ -231,7 +256,8 @@
     "source": "WHO",
     "readTime": "5 min read",
     "url": "https://www.who.int/health-topics/mental-health",
-    "priority": 1
+    "priority": 1,
+    "communityTag": "Mental Health"
   },
   {
     "title": "Mental Health Articles and Resources",
@@ -240,7 +266,8 @@
     "source": "Mental Health Foundation",
     "readTime": "5 min read",
     "url": "https://www.mentalhealth.org.uk/explore-mental-health/articles",
-    "priority": 2
+    "priority": 2,
+    "communityTag": "Mental Health"
   },
   {
     "title": "Mental Health: Expert Advice and Research",
@@ -249,7 +276,8 @@
     "source": "Harvard Health",
     "readTime": "5 min read",
     "url": "https://www.health.harvard.edu/topics/mental-health/all",
-    "priority": 3
+    "priority": 3,
+    "communityTag": "Mental Health"
   },
   {
     "title": "Top Research Articles on Mental Health",
@@ -258,7 +286,8 @@
     "source": "JMIR Mental Health",
     "readTime": "6 min read",
     "url": "https://mental.jmir.org/top-articles/overview",
-    "priority": 4
+    "priority": 4,
+    "communityTag": "Mental Health"
   },
   {
     "title": "Exercise and Stress: How Movement Helps",
@@ -267,7 +296,8 @@
     "source": "Mayo Clinic",
     "readTime": "4 min read",
     "url": "https://www.mayoclinic.org/healthy-lifestyle/stress-management/in-depth/exercise-and-stress/art-20044469",
-    "priority": 5
+    "priority": 5,
+    "communityTag": "Mental Health"
   },
   {
     "title": "Fitness Program: 5 Steps to Get Started",
@@ -276,7 +306,8 @@
     "source": "Mayo Clinic",
     "readTime": "4 min read",
     "url": "https://www.mayoclinic.org/healthy-lifestyle/fitness/in-depth/fitness/art-20048269",
-    "priority": 1
+    "priority": 1,
+    "communityTag": "Running"
   },
   {
     "title": "7 Benefits of Regular Physical Activity",
@@ -285,7 +316,8 @@
     "source": "Mayo Clinic",
     "readTime": "4 min read",
     "url": "https://www.mayoclinic.org/healthy-lifestyle/fitness/in-depth/exercise/art-20048389",
-    "priority": 2
+    "priority": 2,
+    "communityTag": "Running"
   },
   {
     "title": "Exercise and Physical Fitness Basics",
@@ -294,7 +326,8 @@
     "source": "MedlinePlus",
     "readTime": "5 min read",
     "url": "https://medlineplus.gov/exerciseandphysicalfitness.html",
-    "priority": 3
+    "priority": 3,
+    "communityTag": "Running"
   },
   {
     "title": "Adult Physical Activity Guidelines",
@@ -303,7 +336,8 @@
     "source": "CDC",
     "readTime": "4 min read",
     "url": "https://www.cdc.gov/physical-activity-basics/guidelines/adults.html",
-    "priority": 4
+    "priority": 4,
+    "communityTag": "Running"
   },
   {
     "title": "Big Health Benefits of Small Exercise",
@@ -312,7 +346,8 @@
     "source": "Nature",
     "readTime": "3 min read",
     "url": "https://www.nature.com/articles/d41586-026-00237-0",
-    "priority": 5
+    "priority": 5,
+    "communityTag": "Running"
   },
   {
     "title": "Health Topics and Everyday Wellness",
@@ -321,7 +356,8 @@
     "source": "Harvard Health",
     "readTime": "5 min read",
     "url": "https://www.health.harvard.edu/topics",
-    "priority": 1
+    "priority": 1,
+    "communityTag": "General Wellness"
   },
   {
     "title": "Mental Health and Wellbeing Resources",
@@ -330,7 +366,8 @@
     "source": "Mental Health Foundation",
     "readTime": "5 min read",
     "url": "https://www.mentalhealth.org.uk/explore-mental-health/articles",
-    "priority": 2
+    "priority": 2,
+    "communityTag": "General Wellness"
   },
   {
     "title": "Why Hydration Is Essential",
@@ -339,7 +376,8 @@
     "source": "Harvard T.H. Chan School",
     "readTime": "4 min read",
     "url": "https://hsph.harvard.edu/news/the-importance-of-hydration/",
-    "priority": 3
+    "priority": 3,
+    "communityTag": "General Wellness"
   },
   {
     "title": "Good Sleep for Better Health",
@@ -348,7 +386,8 @@
     "source": "NIH",
     "readTime": "4 min read",
     "url": "https://newsinhealth.nih.gov/2021/04/good-sleep-good-health",
-    "priority": 4
+    "priority": 4,
+    "communityTag": "General Wellness"
   },
   {
     "title": "Adult Physical Activity Overview",
@@ -357,7 +396,8 @@
     "source": "CDC",
     "readTime": "3 min read",
     "url": "https://www.cdc.gov/physical-activity-basics/guidelines/adults.html",
-    "priority": 5
+    "priority": 5,
+    "communityTag": "General Wellness"
   },
   {
     "title": "How Much Water Should You Drink?",
@@ -366,7 +406,8 @@
     "source": "Mayo Clinic",
     "readTime": "4 min read",
     "url": "https://www.mayoclinic.org/healthy-lifestyle/nutrition-and-healthy-eating/in-depth/water/art-20044256",
-    "priority": 1
+    "priority": 1,
+    "communityTag": "Nutrition"
   },
   {
     "title": "Healthy Drinks and Hydration",
@@ -375,7 +416,8 @@
     "source": "CDC",
     "readTime": "4 min read",
     "url": "https://www.cdc.gov/healthy-weight-growth/water-healthy-drinks/index.html",
-    "priority": 2
+    "priority": 2,
+    "communityTag": "Nutrition"
   },
   {
     "title": "Diet and Weight Loss Basics",
@@ -384,7 +426,8 @@
     "source": "Harvard Health",
     "readTime": "5 min read",
     "url": "https://www.health.harvard.edu/topics/diet-and-weight-loss",
-    "priority": 3
+    "priority": 3,
+    "communityTag": "Nutrition"
   },
   {
     "title": "Steps for Losing Weight",
@@ -393,7 +436,8 @@
     "source": "CDC",
     "readTime": "4 min read",
     "url": "https://www.cdc.gov/healthy-weight-growth/losing-weight/index.html",
-    "priority": 4
+    "priority": 4,
+    "communityTag": "Nutrition"
   },
   {
     "title": "Healthy Weight Management",
@@ -402,7 +446,8 @@
     "source": "American Heart Association",
     "readTime": "4 min read",
     "url": "https://www.heart.org/en/healthy-living/healthy-eating/losing-weight",
-    "priority": 5
+    "priority": 5,
+    "communityTag": "Nutrition"
   },
   {
     "title": "How to Recover After Exercise",
@@ -411,7 +456,8 @@
     "source": "Mayo Clinic",
     "readTime": "4 min read",
     "url": "https://www.mayoclinic.org/healthy-lifestyle/fitness/in-depth/exercise/art-20048389",
-    "priority": 1
+    "priority": 1,
+    "communityTag": "Recovery"
   },
   {
     "title": "Elements of a Balanced Fitness Routine",
@@ -420,7 +466,8 @@
     "source": "Mayo Clinic",
     "readTime": "5 min read",
     "url": "https://www.mayoclinic.org/healthy-lifestyle/fitness/in-depth/fitness-training/art-20044792",
-    "priority": 2
+    "priority": 2,
+    "communityTag": "Recovery"
   },
   {
     "title": "Exercise and Stress Management",
@@ -429,7 +476,8 @@
     "source": "Mayo Clinic",
     "readTime": "4 min read",
     "url": "https://www.mayoclinic.org/healthy-lifestyle/stress-management/in-depth/exercise-and-stress/art-20044469",
-    "priority": 3
+    "priority": 3,
+    "communityTag": "Recovery"
   },
   {
     "title": "Benefits of Physical Activity",
@@ -438,7 +486,8 @@
     "source": "Mayo Clinic Health System",
     "readTime": "4 min read",
     "url": "https://www.mayoclinichealthsystem.org/hometown-health/speaking-of-health/physical-activity-benefits-and-simple-steps",
-    "priority": 4
+    "priority": 4,
+    "communityTag": "Recovery"
   },
   {
     "title": "Adult Activity and Recovery Basics",
@@ -447,7 +496,8 @@
     "source": "CDC",
     "readTime": "3 min read",
     "url": "https://www.cdc.gov/physical-activity-basics/guidelines/adults.html",
-    "priority": 5
+    "priority": 5,
+    "communityTag": "Recovery"
   },
   {
     "title": "Elements of Strength Training",
@@ -456,7 +506,8 @@
     "source": "Mayo Clinic",
     "readTime": "5 min read",
     "url": "https://www.mayoclinic.org/healthy-lifestyle/fitness/in-depth/exercise/art-20048389",
-    "priority": 1
+    "priority": 1,
+    "communityTag": "Strength Training"
   },
   {
     "title": "7 Benefits of Physical Activity",
@@ -465,7 +516,8 @@
     "source": "Mayo Clinic",
     "readTime": "4 min read",
     "url": "https://www.mayoclinic.org/healthy-lifestyle/fitness/in-depth/exercise/art-20048389",
-    "priority": 2
+    "priority": 2,
+    "communityTag": "Strength Training"
   },
   {
     "title": "Fitness Basics for Beginners",
@@ -474,7 +526,8 @@
     "source": "Mayo Clinic",
     "readTime": "4 min read",
     "url": "https://www.mayoclinic.org/healthy-lifestyle/fitness/basics/fitness-basics/hlv-20049447",
-    "priority": 3
+    "priority": 3,
+    "communityTag": "Strength Training"
   },
   {
     "title": "The Five Elements of Fitness",
@@ -483,7 +536,8 @@
     "source": "Mayo Clinic Health System",
     "readTime": "5 min read",
     "url": "https://www.mayoclinichealthsystem.org/hometown-health/speaking-of-health/the-5-elements-of-fitness",
-    "priority": 4
+    "priority": 4,
+    "communityTag": "Strength Training"
   },
   {
     "title": "Adult Physical Activity Guidelines",
@@ -492,7 +546,8 @@
     "source": "CDC",
     "readTime": "3 min read",
     "url": "https://www.cdc.gov/physical-activity-basics/guidelines/adults.html",
-    "priority": 5
+    "priority": 5,
+    "communityTag": "Strength Training"
   },
   {
     "title": "Meditation: A Simple Way to Reduce Stress",
@@ -501,7 +556,8 @@
     "source": "Mayo Clinic",
     "readTime": "4 min read",
     "url": "https://www.mayoclinic.org/tests-procedures/meditation/in-depth/meditation/art-20045858",
-    "priority": 1
+    "priority": 1,
+    "communityTag": "Meditation"
   },
   {
     "title": "Understanding Mental Health",
@@ -510,7 +566,8 @@
     "source": "WHO",
     "readTime": "5 min read",
     "url": "https://www.who.int/health-topics/mental-health#tab=tab_1",
-    "priority": 2
+    "priority": 2,
+    "communityTag": "Meditation"
   },
   {
     "title": "Mental Health Articles and Insights",
@@ -519,7 +576,8 @@
     "source": "Harvard Health",
     "readTime": "5 min read",
     "url": "https://www.health.harvard.edu/topics/mental-health/all",
-    "priority": 3
+    "priority": 3,
+    "communityTag": "Meditation"
   },
   {
     "title": "Top Mental Health Research Articles",
@@ -528,7 +586,8 @@
     "source": "JMIR Mental Health",
     "readTime": "6 min read",
     "url": "https://mental.jmir.org/top-articles/overview",
-    "priority": 4
+    "priority": 4,
+    "communityTag": "Meditation"
   },
   {
     "title": "Exercise and Stress Relief",
@@ -537,6 +596,7 @@
     "source": "Mayo Clinic",
     "readTime": "4 min read",
     "url": "https://www.mayoclinic.org/healthy-lifestyle/stress-management/in-depth/exercise-and-stress/art-20044469",
-    "priority": 5
+    "priority": 5,
+    "communityTag": "Meditation"
   }
 ]

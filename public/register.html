@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Register | Soft Health</title>
+  <title>Register | Healthopia</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -13,7 +13,10 @@
 <body class="auth-page">
   <div class="auth-shell">
     <section class="auth-hero">
-      <p class="eyebrow">Create your circle</p>
+      <div class="auth-brand">
+        <img class="auth-brand__logo" src="/images/healthopia_logo_nobg.png" alt="Healthopia logo">
+        <span class="auth-brand__wordmark">Healthopia</span>
+      </div>
       <h1>Build a profile that feels grounded, calm, and real.</h1>
       <p class="auth-copy">
         Set up your presence, join supportive communities, and start tracking the habits that shape your wellness journey.
@@ -21,7 +24,7 @@
 
       <div class="auth-preview auth-preview--stacked">
         <div class="mini-card mini-card--stat">
-          <p class="mini-card__label">Soft Layers</p>
+          <p class="mini-card__label">Healthopia UI</p>
           <strong>Editorial UI</strong>
           <span>Clean hierarchy, breathing room, and gentle progress cues.</span>
         </div>
@@ -36,10 +39,44 @@
     <section class="auth-card">
       <div class="auth-card__header">
         <h2>Create account</h2>
-        <p>Choose a username, add your email, and set a secure password to start.</p>
+        <p>Choose a username, select an avatar, add your email, and set a secure password to start.</p>
       </div>
 
       <form id="register-form" class="stack-form">
+        <div class="field">
+          <span>Choose an avatar</span>
+          <input id="avatar-input" type="hidden" name="avatar" value="">
+          <div class="avatar-picker" role="radiogroup" aria-label="Choose a profile avatar">
+            <button class="avatar-option" type="button" role="radio" data-avatar-option="avatar-1.png" aria-checked="false">
+              <img src="/avatars/avatar-1.png" alt="Avatar option 1">
+            </button>
+            <button class="avatar-option" type="button" role="radio" data-avatar-option="avatar-2.png" aria-checked="false">
+              <img src="/avatars/avatar-2.png" alt="Avatar option 2">
+            </button>
+            <button class="avatar-option" type="button" role="radio" data-avatar-option="avatar-3.png" aria-checked="false">
+              <img src="/avatars/avatar-3.png" alt="Avatar option 3">
+            </button>
+            <button class="avatar-option" type="button" role="radio" data-avatar-option="avatar-4.png" aria-checked="false">
+              <img src="/avatars/avatar-4.png" alt="Avatar option 4">
+            </button>
+            <button class="avatar-option" type="button" role="radio" data-avatar-option="avatar-5.png" aria-checked="false">
+              <img src="/avatars/avatar-5.png" alt="Avatar option 5">
+            </button>
+            <button class="avatar-option" type="button" role="radio" data-avatar-option="avatar-6.png" aria-checked="false">
+              <img src="/avatars/avatar-6.png" alt="Avatar option 6">
+            </button>
+            <button class="avatar-option" type="button" role="radio" data-avatar-option="avatar-7.png" aria-checked="false">
+              <img src="/avatars/avatar-7.png" alt="Avatar option 7">
+            </button>
+            <button class="avatar-option" type="button" role="radio" data-avatar-option="avatar-8.png" aria-checked="false">
+              <img src="/avatars/avatar-8.png" alt="Avatar option 8">
+            </button>
+            <button class="avatar-option" type="button" role="radio" data-avatar-option="avatar-9.png" aria-checked="false">
+              <img src="/avatars/avatar-9.png" alt="Avatar option 9">
+            </button>
+          </div>
+        </div>
+
         <label class="field">
           <span>Username</span>
           <input type="text" name="username" placeholder="e.g. elena.chen" autocomplete="username" required>

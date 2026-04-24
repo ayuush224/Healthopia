@@ -22,6 +22,11 @@ const resourceSchema = new Schema({
     required: true,
     trim: true
   },
+  communityTag: {
+    type: String,
+    required: true,
+    trim: true
+  },
   readTime: {
     type: String,
     required: true,
@@ -38,6 +43,6 @@ const resourceSchema = new Schema({
   }
 }, { timestamps: true });
 
-resourceSchema.index({ category: 1, priority: 1 });
+resourceSchema.index({ category: 1, priority: 1, communityTag: 1 });
 
 module.exports = mongoose.model('Resource', resourceSchema);

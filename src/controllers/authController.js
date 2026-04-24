@@ -3,8 +3,10 @@ const HealthTracker = require('../models/HealthTracker');
 const asyncHandler = require('../utils/asyncHandler');
 const { AppError } = require('../utils/errors');
 const { attachAuthCookie, clearAuthCookie } = require('../utils/authTokens');
-const { ensureString, normalizeUsername } = require('../utils/validation');
+const { ensureOptionalString, ensureString, normalizeUsername } = require('../utils/validation');
 const bcrypt = require("bcrypt");
+
+const AVATAR_FILENAME_PATTERN = /^avatar-[1-9]\.png$/;
 
 function serializeAuthUser(user) {
   return {
@@ -12,8 +14,23 @@ function serializeAuthUser(user) {
     name: user.name,
     username: user.username,
     email: user.email,
+    avatar: user.avatar || '',
     likedPosts: user.likedPosts || []
   };
+}
+
+function normalizeAvatarSelection(value) {
+  const avatar = ensureOptionalString(value, { max: 40 });
+
+  if (!avatar) {
+    return '';
+  }
+
+  if (!AVATAR_FILENAME_PATTERN.test(avatar)) {
+    throw new AppError('Selected avatar is invalid.', 400);
+  }
+
+  return avatar;
 }
 
 async function getSaltedPassword(password){
@@ -26,6 +43,7 @@ const register = asyncHandler(async (req, res) => {
   const username = normalizeUsername(req.body.username);
   const email = ensureString(req.body.email, 'Email', { min: 5, max: 254 });
   let password = ensureString(req.body.password, 'Password', { min: 6, max: 128 });
+  const avatar = normalizeAvatarSelection(req.body.avatar);
 
   const existingUser = await User.findOne({
     $or: [
@@ -45,6 +63,7 @@ const register = asyncHandler(async (req, res) => {
     username,
     email,
     password,
+    avatar,
     posts: [],
     likedPosts: [],
     communitiesJoined: []
@@ -74,7 +93,7 @@ const login = asyncHandler(async (req, res) => {
     throw new AppError('No account was found for that email.', 401);
   }
   
-  let isMatch = bcrypt.compare(password, user.password);
+  let isMatch = await bcrypt.compare(password, user.password);
   if(!isMatch){
     throw new AppError("Please Enter Correct Paswword");
   }
