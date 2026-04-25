@@ -1,12 +1,16 @@
 const jwt = require('jsonwebtoken');
 
-const { authCookieName, jwtSecret } = require('../config/env');
+const { authCookieName, frontendUrl, jwtSecret, isProduction } = require('../config/env');
 
 function getCookieOptions() {
+  const isCrossOrigin = Boolean(frontendUrl);
+  const usesHttpsFrontend = frontendUrl.startsWith('https://');
+  const shouldUseCrossSiteCookie = isCrossOrigin && usesHttpsFrontend;
+
   return {
     httpOnly: true,
-    sameSite: 'Strict',
-    secure: true,
+    sameSite: shouldUseCrossSiteCookie ? 'None' : 'Lax',
+    secure: isProduction || usesHttpsFrontend,
     maxAge: 24 * 60 * 60 * 1000
   };
 }

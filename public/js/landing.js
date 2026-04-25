@@ -1,3 +1,5 @@
+import { getApiUrl } from './api.js';
+
 const THEME_STORAGE_KEY = 'soft-health-theme';
 const SLIDE_INTERVAL_MS = 4500;
 
@@ -98,6 +100,20 @@ function stopSlideshow() {
   }
 }
 
+async function redirectIfAuthenticated() {
+  try {
+    const response = await fetch(getApiUrl('/api/users/profile'), {
+      credentials: 'include'
+    });
+
+    if (response.ok) {
+      window.location.replace('/feed');
+    }
+  } catch (_error) {
+    // Ignore auth check failures on the public landing page.
+  }
+}
+
 scrollButtons.forEach((button) => {
   button.addEventListener('click', () => {
     const targetSelector = button.dataset.scrollTarget;
@@ -121,4 +137,5 @@ document.addEventListener('visibilitychange', () => {
 });
 
 initializeTheme();
+redirectIfAuthenticated();
 startSlideshow();

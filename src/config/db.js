@@ -3,7 +3,7 @@ const { mongoUri } = require('./env');
 
 async function connectToDatabase() {
   if (!mongoUri) {
-    throw new Error('MONGODB_URI is required to connect to MongoDB.');
+    throw new Error('MONGO_URI is required to connect to MongoDB.');
   }
 
   mongoose.set('strictQuery', true);

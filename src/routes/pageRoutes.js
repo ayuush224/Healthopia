@@ -18,6 +18,7 @@ router.get('/register', redirectIfAuthenticated, sendPage('register.html'));
 router.get('/', optionalPageAuth, (req, res) => {
   res.sendFile(path.join(publicDir, req.user ? 'app.html' : 'landing.html'));
 });
+router.get('/feed', requirePageAuth, sendPage('app.html'));
 router.get('/profile', requirePageAuth, sendPage('app.html'));
 router.get('/health', requirePageAuth, sendPage('app.html'));
 router.get('/wellness-picks', requirePageAuth, sendPage('app.html'));

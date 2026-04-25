@@ -108,7 +108,7 @@ const elements = {
 function getRoute() {
   const path = window.location.pathname;
 
-  if (path === '/') {
+  if (path === '/' || path === '/feed') {
     return { name: 'home' };
   }
 
@@ -2267,7 +2267,7 @@ async function handleDeletePost(postId) {
   removePostFromLocalState(postId);
 
   if (currentRoute.name === 'post') {
-    history.pushState({}, '', '/');
+    history.pushState({}, '', '/feed');
   }
 
   renderSidebar();

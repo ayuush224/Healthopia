@@ -75,7 +75,7 @@ function redirectIfAuthenticated(req, res, next) {
 
   try {
     verifyAuthToken(token);
-    return res.redirect('/');
+    return res.redirect('/feed');
   } catch (_error) {
     clearAuthCookie(res);
     return next();
