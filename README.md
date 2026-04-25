@@ -1,4 +1,4 @@
-# Health Wellness Community
+# Healthopia
 
 A full-stack wellness community web app built with HTML, CSS, vanilla JavaScript, Node.js, Express, and MongoDB.
 
