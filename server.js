@@ -1,25 +1,21 @@
 require("dotenv").config();
 
 const app = require('./src/app');
+const { port } = require('./src/config/env');
 const { connectToDatabase } = require('./src/config/db');
 const { seedCommunities, seedResources } = require('./src/config/seed');
-
-const PORT = process.env.PORT || 3000;
 
 async function startServer() {
   await connectToDatabase();
   console.log('Database connected.');
 
-  if (process.env.SEED_DB === "true") {
-    await Promise.all([
-      seedCommunities(),
-      seedResources()
-    ]);
-    console.log("Database seeded.");
-  }
+  await Promise.all([
+    seedCommunities(),
+    seedResources()
+  ]);
 
-  app.listen(PORT, () => {
-    console.log(`Healthopia running on port ${PORT}`);
+  app.listen(port, () => {
+    console.log(`Health Wellness app running on port ${port}`);
   });
 }
 

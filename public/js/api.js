@@ -1,5 +1,4 @@
-const BASE_URL = "https://healthopia.onrender.com";
-const rawApiBaseUrl = window.__APP_CONFIG__?.apiBaseUrl || BASE_URL;
+const rawApiBaseUrl = window.__APP_CONFIG__?.apiBaseUrl || '';
 const apiBaseUrl = rawApiBaseUrl.replace(/\/+$/, '');
 
 export function getApiUrl(path = '') {
