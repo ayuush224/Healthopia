@@ -225,6 +225,40 @@ const addComment = asyncHandler(async (req, res) => {
   });
 });
 
+const deleteComment = asyncHandler(async (req, res) => {
+  const commentId = ensureObjectId(req.params.id, 'Comment id');
+  const post = await Post.findOne({ 'comments._id': commentId });
+
+  if (!post) {
+    throw new AppError('Comment not found.', 404);
+  }
+
+  const comment = post.comments.id(commentId);
+
+  if (!comment) {
+    throw new AppError('Comment not found.', 404);
+  }
+
+  if (!comment.userId || comment.userId.toString() !== req.user.id) {
+    return res.status(403).json({ message: 'Unauthorized' });
+  }
+
+  comment.deleteOne();
+  await post.save();
+
+  const populatedPost = await decoratePostsForUser(
+    await buildPostQuery(Post.findById(post._id)),
+    req.user._id
+  );
+
+  res.json({
+    message: 'Comment deleted.',
+    commentId,
+    postId: post._id,
+    post: populatedPost
+  });
+});
+
 const deletePost = asyncHandler(async (req, res) => {
   const postId = ensureObjectId(req.params.id, 'Post id');
   const post = await Post.findById(postId).select('user createdBy community communityId image photo');
@@ -277,6 +311,7 @@ module.exports = {
   getPosts,
   createPost,
   deletePost,
+  deleteComment,
   getPostById,
   likePost,
   addComment

@@ -315,6 +315,23 @@ function isCurrentUserPostOwner(post) {
   return Boolean(authorId && state.profile?._id && String(authorId) === String(state.profile._id));
 }
 
+function getCommentAuthorId(comment) {
+  if (!comment?.userId) {
+    return '';
+  }
+
+  if (typeof comment.userId === 'object') {
+    return String(comment.userId._id || comment.userId.id || '');
+  }
+
+  return String(comment.userId);
+}
+
+function canDeleteComment(comment) {
+  const commentAuthorId = getCommentAuthorId(comment);
+  return Boolean(commentAuthorId && state.profile?._id && commentAuthorId === String(state.profile._id));
+}
+
 function setInlineMessage(element, text, type = 'error') {
   if (!element) {
     return;
@@ -641,7 +658,7 @@ function renderOnboardingModal() {
 }
 
 function getPostCollections() {
-  return [state.homePosts, state.profilePosts, state.communityPosts];
+  return [state.homePosts, state.profilePosts, state.communityPosts, state.likedPosts, state.savedPosts];
 }
 
 function visitLocalPost(postId, visitor) {
@@ -1164,13 +1181,24 @@ function renderCommentPanel(post, isOpen) {
 
       <div class="comment-list">
         ${comments.length ? comments.map((comment) => `
-          <article class="surface-panel comment-surface">
+          <article class="surface-panel comment-surface" data-comment-id="${escapeHtml(String(comment._id || ''))}">
             <div class="comment-pill">
               ${renderAvatar(comment.userId || { name: 'Member' }, 'small')}
               <div class="comment-bubble">
                 <strong>${escapeHtml(comment.userId?.name || 'Community Member')}</strong>
                 <span>${escapeHtml(comment.description)}</span>
               </div>
+              ${canDeleteComment(comment) && comment._id ? `
+                <button
+                  class="icon-ghost icon-ghost--danger"
+                  type="button"
+                  data-action="delete-comment"
+                  data-post-id="${postId}"
+                  data-comment-id="${escapeHtml(String(comment._id))}"
+                  aria-label="Delete comment">
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
+              ` : ''}
             </div>
           </article>
         `).join('') : `
@@ -1477,13 +1505,15 @@ function getPreviousDateKey(dateKey) {
 
 function formatActivityDayLabel(dateKey, options = {}) {
   const date = parseActivityDate(dateKey);
-  const formatter = new Intl.DateTimeFormat(undefined, {
-    weekday: options.long ? 'long' : 'short',
-    month: options.long ? 'short' : undefined,
-    day: options.long ? 'numeric' : undefined
-  });
-
-  return formatter.format(date);
+  return date.toLocaleDateString('en-US', options.long
+    ? {
+        weekday: 'long',
+        month: 'short',
+        day: 'numeric'
+      }
+    : {
+        weekday: 'short'
+      });
 }
 
 function formatActivityMetric(key, value) {
@@ -1507,6 +1537,7 @@ function normalizeActivityDay(day = {}, fallbackDate = getClientDateKey()) {
 
   return {
     date: String(day.date || fallbackDate),
+    label: String(day.label || ''),
     walking: Number.isFinite(walking) ? walking : 0,
     running: Number.isFinite(running) ? running : 0,
     sleep: Number.isFinite(sleep) ? sleep : 0,
@@ -1515,7 +1546,60 @@ function normalizeActivityDay(day = {}, fallbackDate = getClientDateKey()) {
 }
 
 function getDashboardTodayKey() {
-  return state.weeklyData[state.weeklyData.length - 1]?.date || getClientDateKey();
+  return getClientDateKey(new Date());
+}
+
+function buildRollingWeeklyData(activityLogs = state.health?.dailyLogs || []) {
+  const today = new Date();
+  const logsByDate = new Map(
+    (activityLogs || [])
+      .filter((log) => log?.date)
+      .map((log) => {
+        const dateKey = String(log.date);
+        return [
+          dateKey,
+          normalizeActivityDay({
+            ...log,
+            date: dateKey,
+            hasData: true
+          })
+        ];
+      })
+  );
+  const days = [];
+
+  for (let i = 6; i >= 0; i -= 1) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+
+    days.push({
+      label: d.toLocaleDateString('en-US', { weekday: 'short' }),
+      dateKey: getClientDateKey(d)
+    });
+  }
+
+  return days.map((day) => {
+    const existingDay = logsByDate.get(day.dateKey);
+    return normalizeActivityDay(existingDay
+      ? {
+          ...existingDay,
+          label: day.label,
+          date: day.dateKey,
+          hasData: true
+        }
+      : {
+          label: day.label,
+          date: day.dateKey
+        });
+  });
+}
+
+function syncWeeklyHealthWindow() {
+  state.weeklyData = buildRollingWeeklyData(state.health?.dailyLogs || []);
+
+  if (!state.weeklyData.some((day) => day.date === state.selectedDay)) {
+    state.selectedDay = getDashboardTodayKey();
+  }
 }
 
 function getActivityDay(dateKey = state.selectedDay) {
@@ -1591,7 +1675,7 @@ function renderActivityChart() {
                 <span class="dashboard-chart__segment dashboard-chart__segment--walking"></span>
               </span>
             </span>
-            <span class="dashboard-chart__label">${escapeHtml(formatActivityDayLabel(day.date))}</span>
+            <span class="dashboard-chart__label">${escapeHtml(day.label || formatActivityDayLabel(day.date))}</span>
           </button>
         `;
       }).join('')}
@@ -1700,15 +1784,9 @@ function renderHealthLogModal() {
 }
 
 function renderHealthView() {
-  if (!state.weeklyData.length) {
-    state.weeklyData = Array.from({ length: 7 }, (_item, index) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (6 - index));
-      return normalizeActivityDay({ date: getClientDateKey(date) });
-    });
-  }
+  syncWeeklyHealthWindow();
 
-  if (!state.selectedDay) {
+  if (!state.selectedDay || !state.weeklyData.some((day) => day.date === state.selectedDay)) {
     state.selectedDay = getDashboardTodayKey();
   }
 
@@ -1858,11 +1936,7 @@ async function loadViewData() {
   }
 
   if (route.name === 'health') {
-    const response = await apiFetch('/api/health/weekly');
-    state.weeklyData = (response.weeklyData || []).map((day) => normalizeActivityDay(day));
-    state.selectedDay = state.weeklyData.some((day) => day.date === state.selectedDay)
-      ? state.selectedDay
-      : response.selectedDay || getDashboardTodayKey();
+    syncWeeklyHealthWindow();
     return;
   }
 
@@ -2215,6 +2289,32 @@ async function handleDeletePost(postId) {
   }
 }
 
+async function handleDeleteComment(postId, commentId) {
+  if (!commentId) {
+    return;
+  }
+
+  const confirmed = window.confirm('Delete this comment?');
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    const response = await apiFetch(`/api/comments/${commentId}`, {
+      method: 'DELETE'
+    });
+
+    syncUpdatedPost(response.post);
+    state.openCommentPostIds.add(String(response.postId || postId));
+    renderSidebar();
+    renderCurrentView();
+    showToast('Comment deleted.');
+  } catch (error) {
+    showToast(error.message, 'error');
+  }
+}
+
 async function handleHealthUpdate(form) {
   const submitButton = form.querySelector('button[type="submit"]');
   submitButton.disabled = true;
@@ -2425,6 +2525,11 @@ document.addEventListener('click', async (event) => {
 
   if (action === 'delete-post') {
     await handleDeletePost(actionButton.dataset.postId);
+    return;
+  }
+
+  if (action === 'delete-comment') {
+    await handleDeleteComment(actionButton.dataset.postId, actionButton.dataset.commentId);
     return;
   }
 

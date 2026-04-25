@@ -6,13 +6,14 @@ const { ensureOptionalNumber } = require('../utils/validation');
 const STEPS_GOAL = 10000;
 
 function getDateKey(date = new Date()) {
-  return date.toISOString().slice(0, 10);
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return localDate.toISOString().slice(0, 10);
 }
 
 function getDateKeyOffset(daysOffset = 0) {
-  const date = new Date();
-  date.setUTCHours(0, 0, 0, 0);
-  date.setUTCDate(date.getUTCDate() + daysOffset);
+  const today = new Date();
+  const date = new Date(today);
+  date.setDate(today.getDate() + daysOffset);
 
   return getDateKey(date);
 }
@@ -87,24 +88,48 @@ const getHealth = asyncHandler(async (req, res) => {
 
 const getTodayHealth = asyncHandler(async (req, res) => {
   const tracker = await getOrCreateHealthTracker(req.user._id);
-  const todayKey = getDateKeyOffset();
+  const today = new Date();
+  const todayKey = getDateKey(today);
 
   res.json({
-    today: toActivityDay(todayKey, findDailyLog(tracker, todayKey))
+    today: toActivityDay(todayKey, findDailyLog(tracker, todayKey)),
+    todayLabel: today.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric'
+    })
   });
 });
 
 const getWeeklyHealth = asyncHandler(async (req, res) => {
   const tracker = await getOrCreateHealthTracker(req.user._id);
   const logsByDate = new Map((tracker.dailyLogs || []).map((log) => [log.date, log]));
-  const weeklyData = Array.from({ length: 7 }, (_item, index) => {
-    const dateKey = getDateKeyOffset(index - 6);
-    return toActivityDay(dateKey, logsByDate.get(dateKey));
-  });
+  const today = new Date();
+  const days = [];
+
+  for (let i = 6; i >= 0; i -= 1) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+
+    days.push({
+      label: d.toLocaleDateString('en-US', { weekday: 'short' }),
+      dateKey: getDateKey(d)
+    });
+  }
+
+  const weeklyData = days.map((day) => ({
+    ...toActivityDay(day.dateKey, logsByDate.get(day.dateKey)),
+    label: day.label
+  }));
 
   res.json({
     weeklyData,
-    selectedDay: getDateKeyOffset()
+    selectedDay: getDateKey(today),
+    todayLabel: today.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric'
+    })
   });
 });
 
