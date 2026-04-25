@@ -33,7 +33,7 @@ form.addEventListener('submit', async (event) => {
       })
     });
 
-    window.location.href = '/feed';
+    window.location.href = '/';
   } catch (error) {
     setMessage(error.message);
   } finally {

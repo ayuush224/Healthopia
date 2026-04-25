@@ -1,18 +1,3 @@
-const rawApiBaseUrl = window.__APP_CONFIG__?.apiBaseUrl || '';
-const apiBaseUrl = rawApiBaseUrl.replace(/\/+$/, '');
-
-export function getApiUrl(path = '') {
-  if (/^https?:\/\//i.test(path)) {
-    return path;
-  }
-
-  if (!apiBaseUrl) {
-    return path;
-  }
-
-  return `${apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`;
-}
-
 export async function apiFetch(url, options = {}) {
   const config = {
     credentials: 'include',
@@ -24,7 +9,7 @@ export async function apiFetch(url, options = {}) {
     config.headers['Content-Type'] = 'application/json';
   }
 
-  const response = await fetch(getApiUrl(url), config);
+  const response = await fetch(url, config);
   const rawText = await response.text();
   let payload = {};
 
