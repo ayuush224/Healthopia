@@ -73,7 +73,13 @@ const register = asyncHandler(async (req, res) => {
     userId: user._id,
     waterIntake: 0,
     waterGoal: 2500,
-    steps: 0
+    steps: 0,
+    running: 0,
+    sleep: 0,
+    stepsGoal: 10000,
+    runningGoal: 5,
+    sleepGoal: 8,
+    dailyLogs: []
   });
 
   attachAuthCookie(res, user._id.toString());

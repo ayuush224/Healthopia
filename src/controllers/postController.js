@@ -91,9 +91,8 @@ const createPost = asyncHandler(async (req, res) => {
     const body = ensureOptionalString(req.body.body, { max: 5000 });
     const communityId = ensureObjectId(req.body.community, 'Community');
     const tags = parseTags(req.body.tags);
-    // const image = req.file ? `/uploads/${req.file.filename}` : '';
-    const image = req.cloudinary.secure_url;
-    const public_id = req.cloudinary.public_id;
+    const image = req.cloudinary?.secure_url || '';
+    const public_id = req.cloudinary?.public_id || '';
 
     if (!title && !body) {
       throw new AppError('Add a title or body before posting.', 400);

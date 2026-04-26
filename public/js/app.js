@@ -13,16 +13,16 @@ import { createPostLikeManager } from './postLikeManager.js';
 const MAX_POST_IMAGE_BYTES = 512 * 1024;
 const THEME_STORAGE_KEY = 'soft-health-theme';
 const SAVED_POSTS_STORAGE_KEY = 'soft-health-saved-posts';
+const DEFAULT_ACTIVITY_GOALS = {
+  walking: 10000,
+  running: 5,
+  sleep: 8
+};
 const PROFILE_TABS = [
   { id: 'posts', label: 'Your Posts' },
   { id: 'liked', label: 'Liked Posts' },
   { id: 'saved', label: 'Saved Posts' }
 ];
-const ACTIVITY_TARGETS = {
-  walking: 10000,
-  running: 5,
-  sleep: 8
-};
 const ACTIVITY_METRICS = [
   { key: 'walking', label: 'Walking', unit: 'steps', colorClass: 'dashboard-stat--walking' },
   { key: 'running', label: 'Running', unit: 'km', colorClass: 'dashboard-stat--running' },
@@ -51,6 +51,7 @@ const state = {
   selectedDay: '',
   healthLogDate: '',
   healthLogModalOpen: false,
+  dailyGoalsPopoverOpen: false,
   homePosts: [],
   currentCommunity: null,
   communityPosts: [],
@@ -71,6 +72,7 @@ const state = {
 };
 
 const likeManager = createPostLikeManager();
+let dailyHealthRolloverTimer = null;
 
 const elements = {
   viewRoot: document.getElementById('view-root'),
@@ -80,6 +82,8 @@ const elements = {
   healthSidebar: document.getElementById('health-sidebar'),
   profileStatsSidebar: document.getElementById('profile-stats-sidebar'),
   communityRecommendationsSidebar: document.getElementById('community-recommendations-sidebar'),
+  dailyGoalsSidebarSection: document.getElementById('daily-goals-sidebar-section'),
+  dailyGoalsSidebar: document.getElementById('daily-goals-sidebar'),
   wellnessPicksList: document.getElementById('wellness-picks-list'),
   headerAvatar: document.getElementById('header-avatar'),
   themeToggleButton: document.getElementById('theme-toggle-button'),
@@ -943,7 +947,155 @@ function renderWellnessPicksBody() {
   `;
 }
 
+function formatGoalValue(metricKey, value) {
+  const numericValue = Number(value || 0);
+
+  if (metricKey === 'walking') {
+    return `${formatCompactNumber(Math.round(numericValue))} steps`;
+  }
+
+  if (metricKey === 'running') {
+    return `${numericValue.toFixed(numericValue % 1 ? 1 : 0)} km`;
+  }
+
+  return `${numericValue.toFixed(numericValue % 1 ? 1 : 0)} hrs`;
+}
+
+function getActivityTargets() {
+  return {
+    walking: Number(state.health?.stepsGoal) > 0 ? Number(state.health.stepsGoal) : DEFAULT_ACTIVITY_GOALS.walking,
+    running: Number(state.health?.runningGoal) > 0 ? Number(state.health.runningGoal) : DEFAULT_ACTIVITY_GOALS.running,
+    sleep: Number(state.health?.sleepGoal) > 0 ? Number(state.health.sleepGoal) : DEFAULT_ACTIVITY_GOALS.sleep
+  };
+}
+
+function getTodayHealthTrackerSummary() {
+  const todayKey = getDashboardTodayKey();
+  const todayLog = (state.health?.dailyLogs || []).find((log) => String(log?.date || '') === todayKey);
+  const goals = getActivityTargets();
+  const steps = Number(todayLog?.walking || 0);
+  const running = Number(todayLog?.running || 0);
+  const sleep = Number(todayLog?.sleep || 0);
+
+  return {
+    date: todayKey,
+    steps,
+    running,
+    sleep,
+    stepsGoal: goals.walking,
+    runningGoal: goals.running,
+    sleepGoal: goals.sleep,
+    stepsPercent: goals.walking ? Math.min(100, Math.round((steps / goals.walking) * 100)) : 0,
+    runningPercent: goals.running ? Math.min(100, Math.round((running / goals.running) * 100)) : 0,
+    sleepPercent: goals.sleep ? Math.min(100, Math.round((sleep / goals.sleep) * 100)) : 0
+  };
+}
+
+function renderDailyGoalsSidebar() {
+  const goals = getActivityTargets();
+
+  return `
+    <div class="daily-goals-shell">
+      <article class="health-card daily-goals-card">
+        <div class="daily-goals-card__header">
+          <div class="daily-goals-card__copy">
+            <span class="mini-card__label">Custom targets</span>
+            <strong>Daily goals</strong>
+            <p>${escapeHtml(formatGoalValue('walking', goals.walking))} · ${escapeHtml(formatGoalValue('running', goals.running))} · ${escapeHtml(formatGoalValue('sleep', goals.sleep))}</p>
+          </div>
+          <button class="soft-button" type="button" data-action="toggle-daily-goals-popover" aria-expanded="${String(state.dailyGoalsPopoverOpen)}" aria-controls="daily-goals-popover">
+            Edit daily goals
+          </button>
+        </div>
+      </article>
+      ${state.dailyGoalsPopoverOpen ? renderDailyGoalsPopover(goals) : ''}
+    </div>
+  `;
+}
+
+function renderDailyGoalsPopover(goals) {
+  return `
+    <article id="daily-goals-popover" class="detail-card daily-goals-popover" role="dialog" aria-labelledby="daily-goals-title">
+      <form id="daily-goals-form" class="stack-form" novalidate>
+        <div class="detail-card__header detail-card__header--stacked">
+            <h2 id="daily-goals-title">Edit goals</h2>
+        </div>
+
+        <label class="field">
+          <span>Steps</span>
+          <input type="number" min="1" step="1" name="stepsGoal" value="${escapeHtml(String(goals.walking))}" required>
+        </label>
+
+        <label class="field">
+          <span>Running (km)</span>
+          <input type="number" min="0.1" step="0.1" name="runningGoal" value="${escapeHtml(String(goals.running))}" required>
+        </label>
+
+        <label class="field">
+          <span>Sleep (hrs)</span>
+          <input type="number" min="0.25" step="0.25" name="sleepGoal" value="${escapeHtml(String(goals.sleep))}" required>
+        </label>
+
+        <div class="composer-actions composer-actions--modal">
+          <button class="button-primary" type="submit">Save goals</button>
+        </div>
+      </form>
+    </article>
+  `;
+}
+
+function openDailyGoalsPopover() {
+  if (state.dailyGoalsPopoverOpen) {
+    return;
+  }
+
+  state.dailyGoalsPopoverOpen = true;
+  renderSidebar();
+
+  requestAnimationFrame(() => {
+    const firstInput = document.querySelector('#daily-goals-form input[name="stepsGoal"]');
+    firstInput?.focus();
+  });
+}
+
+function closeDailyGoalsPopover() {
+  if (!state.dailyGoalsPopoverOpen) {
+    return;
+  }
+
+  state.dailyGoalsPopoverOpen = false;
+  renderSidebar();
+}
+
+function refreshForDailyHealthRollover() {
+  if (!state.shellHydrated) {
+    return;
+  }
+
+  state.selectedDay = getDashboardTodayKey();
+  syncWeeklyHealthWindow();
+  renderSidebar();
+  renderCurrentView();
+}
+
+function scheduleDailyHealthRollover() {
+  if (dailyHealthRolloverTimer) {
+    window.clearTimeout(dailyHealthRolloverTimer);
+  }
+
+  const now = new Date();
+  const nextMidnight = new Date(now);
+  nextMidnight.setHours(24, 0, 1, 0);
+
+  dailyHealthRolloverTimer = window.setTimeout(() => {
+    refreshForDailyHealthRollover();
+    scheduleDailyHealthRollover();
+  }, Math.max(1000, nextMidnight.getTime() - now.getTime()));
+}
+
 function renderSidebar() {
+  const route = getRoute();
+  const isHealthRoute = route.name === 'health';
   const profileName = state.profile?.name || 'Healthopia';
   elements.headerAvatar.innerHTML = renderAvatar(state.profile || { name: profileName }, 'small');
   elements.profileMenu.innerHTML = `
@@ -989,7 +1141,7 @@ function renderSidebar() {
       `).join('')
     : '<li><span class="muted-copy">No circles joined yet.</span></li>';
 
-  const health = state.health || { waterIntake: 0, waterGoal: 2500, hydrationPercent: 0, steps: 0, stepsPercent: 0 };
+  const todayHealthSummary = getTodayHealthTrackerSummary();
   elements.healthSidebar.innerHTML = `
 
 
@@ -997,8 +1149,8 @@ function renderSidebar() {
       <div class="ring-row">
         <div class="ring__meta">
           <span class="mini-card__label">Daily Steps</span>
-          <strong>${formatCompactNumber(health.steps)}</strong>
-          <span>${health.stepsPercent}% of ${formatCompactNumber(health.stepsGoal || 10000)} goal</span>
+          <strong>${formatCompactNumber(todayHealthSummary.steps)}</strong>
+          <span>${todayHealthSummary.stepsPercent}% of ${formatCompactNumber(todayHealthSummary.stepsGoal)} goal</span>
         </div>
         <div class="ring">
           <svg viewBox="0 0 120 120" aria-hidden="true">
@@ -1012,7 +1164,7 @@ function renderSidebar() {
               stroke-width="10"
               stroke-linecap="round"
               stroke-dasharray="301.59"
-              stroke-dashoffset="${301.59 - (301.59 * health.stepsPercent) / 100}">
+              stroke-dashoffset="${301.59 - (301.59 * todayHealthSummary.stepsPercent) / 100}">
             </circle>
           </svg>
           <div class="ring__icon">
@@ -1062,6 +1214,16 @@ function renderSidebar() {
             <p>You have already explored every available community.</p>
           </article>
         `;
+  }
+
+  if (!isHealthRoute) {
+    state.dailyGoalsPopoverOpen = false;
+  }
+
+  if (elements.dailyGoalsSidebarSection && elements.dailyGoalsSidebar) {
+    elements.dailyGoalsSidebarSection.classList.toggle('is-hidden', !isHealthRoute);
+    elements.dailyGoalsSidebarSection.setAttribute('aria-hidden', String(!isHealthRoute));
+    elements.dailyGoalsSidebar.innerHTML = isHealthRoute ? renderDailyGoalsSidebar() : '';
   }
 
   if (elements.wellnessPicksList) {
@@ -1608,9 +1770,10 @@ function getActivityDay(dateKey = state.selectedDay) {
 }
 
 function getActivityScores(day) {
-  const walkingScore = Math.min(day.walking / ACTIVITY_TARGETS.walking, 1);
-  const runningScore = Math.min(day.running / ACTIVITY_TARGETS.running, 1);
-  const sleepScore = Math.min(day.sleep / ACTIVITY_TARGETS.sleep, 1);
+  const targets = getActivityTargets();
+  const walkingScore = Math.min(day.walking / targets.walking, 1);
+  const runningScore = Math.min(day.running / targets.running, 1);
+  const sleepScore = Math.min(day.sleep / targets.sleep, 1);
   const totalScore = (walkingScore + runningScore + sleepScore) / 3;
   const scoreTotal = walkingScore + runningScore + sleepScore;
 
@@ -2342,6 +2505,32 @@ async function handleHealthUpdate(form) {
   }
 }
 
+async function handleDailyGoalsSubmit(form) {
+  const submitButton = form.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  submitButton.textContent = 'Saving...';
+
+  try {
+    const formData = new FormData(form);
+    await apiFetch('/api/health', {
+      method: 'PUT',
+      body: JSON.stringify({
+        stepsGoal: Number(formData.get('stepsGoal')),
+        runningGoal: Number(formData.get('runningGoal')),
+        sleepGoal: Number(formData.get('sleepGoal'))
+      })
+    });
+
+    state.dailyGoalsPopoverOpen = false;
+    showToast('Daily goals updated.');
+    await refreshView({ skipLoading: true, refreshShell: true });
+  } catch (error) {
+    showToast(error.message, 'error');
+    submitButton.disabled = false;
+    submitButton.textContent = 'Save goals';
+  }
+}
+
 function openHealthLogModal(dateKey = getDashboardTodayKey()) {
   state.healthLogDate = dateKey;
   state.healthLogModalOpen = true;
@@ -2441,6 +2630,10 @@ document.addEventListener('click', async (event) => {
 
   const actionButton = event.target.closest('[data-action]');
   if (!actionButton) {
+    if (state.dailyGoalsPopoverOpen && !event.target.closest('#daily-goals-sidebar-section')) {
+      closeDailyGoalsPopover();
+    }
+
     if (!event.target.closest('.menu-shell')) {
       closeProfileMenu();
     }
@@ -2550,6 +2743,20 @@ document.addEventListener('click', async (event) => {
     return;
   }
 
+  if (action === 'toggle-daily-goals-popover') {
+    if (state.dailyGoalsPopoverOpen) {
+      closeDailyGoalsPopover();
+    } else {
+      openDailyGoalsPopover();
+    }
+    return;
+  }
+
+  if (action === 'dismiss-daily-goals-popover') {
+    closeDailyGoalsPopover();
+    return;
+  }
+
   if (action === 'open-health-log-modal') {
     openHealthLogModal(actionButton.dataset.date || getDashboardTodayKey());
     return;
@@ -2622,6 +2829,11 @@ document.addEventListener('submit', async (event) => {
     event.preventDefault();
     await handleHealthLogSubmit(event.target);
   }
+
+  if (event.target.id === 'daily-goals-form') {
+    event.preventDefault();
+    await handleDailyGoalsSubmit(event.target);
+  }
 });
 
 elements.profileMenuButton.addEventListener('click', (event) => {
@@ -2643,6 +2855,11 @@ elements.postImageInput.addEventListener('change', (event) => {
 });
 
 window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && state.dailyGoalsPopoverOpen) {
+    closeDailyGoalsPopover();
+    return;
+  }
+
   if (event.key === 'Escape' && state.healthLogModalOpen) {
     closeHealthLogModal();
     return;
@@ -2662,6 +2879,13 @@ window.addEventListener('popstate', () => {
   refreshView();
 });
 
+window.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    refreshForDailyHealthRollover();
+  }
+});
+
 initializeTheme();
 renderLoadingState();
+scheduleDailyHealthRollover();
 refreshView({ skipLoading: true });

@@ -3,7 +3,11 @@ const asyncHandler = require('../utils/asyncHandler');
 const { AppError } = require('../utils/errors');
 const { ensureOptionalNumber } = require('../utils/validation');
 
-const STEPS_GOAL = 10000;
+const DEFAULT_ACTIVITY_GOALS = {
+  steps: 10000,
+  running: 5,
+  sleep: 8
+};
 
 function getDateKey(date = new Date()) {
   const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
@@ -46,17 +50,55 @@ function findDailyLog(tracker, dateKey) {
   return tracker.dailyLogs?.find((log) => log.date === dateKey) || null;
 }
 
+function ensureTodayLog(tracker, dateKey) {
+  const existingLog = findDailyLog(tracker, dateKey);
+
+  if (existingLog) {
+    return existingLog;
+  }
+
+  tracker.dailyLogs.push({
+    date: dateKey,
+    walking: Number(tracker.steps || 0),
+    running: Number(tracker.running || 0),
+    sleep: Number(tracker.sleep || 0)
+  });
+
+  return findDailyLog(tracker, dateKey);
+}
+
+function getGoalValue(value, fallback) {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : fallback;
+}
+
 function enrichHealthTracker(tracker) {
+  const todayKey = getDateKeyOffset();
+  const todayLog = findDailyLog(tracker, todayKey);
   const waterGoal = tracker.waterGoal || 0;
   const hydrationPercent = waterGoal ? Math.min(100, Math.round((tracker.waterIntake / waterGoal) * 100)) : 0;
-  const stepsGoal = STEPS_GOAL;
-  const stepsPercent = Math.min(100, Math.round((tracker.steps / stepsGoal) * 100));
+  const stepsGoal = getGoalValue(tracker.stepsGoal, DEFAULT_ACTIVITY_GOALS.steps);
+  const runningGoal = getGoalValue(tracker.runningGoal, DEFAULT_ACTIVITY_GOALS.running);
+  const sleepGoal = getGoalValue(tracker.sleepGoal, DEFAULT_ACTIVITY_GOALS.sleep);
+  const steps = Number(todayLog?.walking || 0);
+  const running = Number(todayLog?.running || 0);
+  const sleep = Number(todayLog?.sleep || 0);
+  const stepsPercent = Math.min(100, Math.round((steps / stepsGoal) * 100));
+  const runningPercent = Math.min(100, Math.round((running / runningGoal) * 100));
+  const sleepPercent = Math.min(100, Math.round((sleep / sleepGoal) * 100));
 
   return {
     ...tracker.toObject(),
+    steps,
+    running,
+    sleep,
     hydrationPercent,
     stepsGoal,
-    stepsPercent
+    runningGoal,
+    sleepGoal,
+    stepsPercent,
+    runningPercent,
+    sleepPercent
   };
 }
 
@@ -69,8 +111,11 @@ async function getOrCreateHealthTracker(userId) {
       waterIntake: 0,
       waterGoal: 2500,
       steps: 0,
+      stepsGoal: DEFAULT_ACTIVITY_GOALS.steps,
       running: 0,
+      runningGoal: DEFAULT_ACTIVITY_GOALS.running,
       sleep: 0,
+      sleepGoal: DEFAULT_ACTIVITY_GOALS.sleep,
       dailyLogs: []
     });
   }
@@ -139,8 +184,12 @@ const updateHealth = asyncHandler(async (req, res) => {
   const waterIntake = ensureOptionalNumber(req.body.waterIntake, 'Water intake');
   const waterGoal = ensureOptionalNumber(req.body.waterGoal, 'Water goal');
   const steps = ensureOptionalNumber(req.body.steps, 'Steps');
+  const stepsGoal = ensureOptionalNumber(req.body.stepsGoal, 'Steps goal');
   const running = ensureOptionalNumber(req.body.running, 'Running');
+  const runningGoal = ensureOptionalNumber(req.body.runningGoal, 'Running goal');
   const sleep = ensureOptionalNumber(req.body.sleep, 'Sleep');
+  const sleepGoal = ensureOptionalNumber(req.body.sleepGoal, 'Sleep goal');
+  const todayKey = getDateKeyOffset();
 
   if (waterIntake !== undefined) {
     tracker.waterIntake = waterIntake;
@@ -154,12 +203,52 @@ const updateHealth = asyncHandler(async (req, res) => {
     tracker.steps = steps;
   }
 
+  if (stepsGoal !== undefined) {
+    if (stepsGoal <= 0) {
+      throw new AppError('Steps goal must be greater than 0.', 400);
+    }
+
+    tracker.stepsGoal = stepsGoal;
+  }
+
   if (running !== undefined) {
     tracker.running = running;
   }
 
+  if (runningGoal !== undefined) {
+    if (runningGoal <= 0) {
+      throw new AppError('Running goal must be greater than 0.', 400);
+    }
+
+    tracker.runningGoal = runningGoal;
+  }
+
   if (sleep !== undefined) {
     tracker.sleep = sleep;
+  }
+
+  if (sleepGoal !== undefined) {
+    if (sleepGoal <= 0) {
+      throw new AppError('Sleep goal must be greater than 0.', 400);
+    }
+
+    tracker.sleepGoal = sleepGoal;
+  }
+
+  if (steps !== undefined || running !== undefined || sleep !== undefined) {
+    const todayLog = ensureTodayLog(tracker, todayKey);
+
+    if (steps !== undefined) {
+      todayLog.walking = steps;
+    }
+
+    if (running !== undefined) {
+      todayLog.running = running;
+    }
+
+    if (sleep !== undefined) {
+      todayLog.sleep = sleep;
+    }
   }
 
   await tracker.save();
