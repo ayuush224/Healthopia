@@ -10,7 +10,7 @@ import {
 } from './helpers.js';
 import { createPostLikeManager } from './postLikeManager.js';
 
-const MAX_POST_IMAGE_BYTES = 512 * 1024;
+const MAX_POST_IMAGE_BYTES = 10 * 1024 * 1024;
 const THEME_STORAGE_KEY = 'soft-health-theme';
 const SAVED_POSTS_STORAGE_KEY = 'soft-health-saved-posts';
 const DEFAULT_ACTIVITY_GOALS = {
@@ -492,7 +492,7 @@ function handlePostImageSelection(file) {
 
   if (file.size > MAX_POST_IMAGE_BYTES) {
     clearPostImageSelection();
-    setPostImageError('Image must be 512KB or smaller.');
+    setPostImageError(`Image must be ${MAX_POST_IMAGE_BYTES}KB or smaller.`);
     return false;
   }
 

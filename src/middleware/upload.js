@@ -5,8 +5,8 @@ const multer = require('multer');
 const { AppError } = require('../utils/errors');
 
 const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
-const MAX_POST_IMAGE_BYTES = 512 * 1024;
-const IMAGE_LIMIT_MESSAGE = 'Image must be 512KB or smaller.';
+const MAX_POST_IMAGE_BYTES = 10 * 1024 * 1024;
+const IMAGE_LIMIT_MESSAGE = `Image must be ${MAX_POST_IMAGE_BYTES}KB or smaller.`;
 
 fs.mkdirSync(uploadsDir, { recursive: true });
 
