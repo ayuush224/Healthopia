@@ -7,8 +7,7 @@
     "start": "node server.js",
     "dev": "node server.js",
     "test": "node --test --experimental-test-isolation=none",
-    "build": "vercel build",
-    "vercel-build": "echo 'Vercel build complete'"
+    "build": "echo 'Build complete'"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
