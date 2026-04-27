@@ -7,6 +7,10 @@ This project combines community posting, personalized wellness resources, and he
 ## Link to webpage
   https://healthopia-8bvr.onrender.com/
 
+## Link to the clean github repo 
+  https://github.com/upendra-devhub/Healthopia_Backup
+  if you want to see to repo withput any of the clutter please consider visiting the the provided link
+
 ## What the Project Includes
 
 ### Core product areas
